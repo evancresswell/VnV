@@ -1,0 +1,6 @@
+L2error() ->	iterates through solution (not ghost cells) and adds (a[i] - sin(x[i]+u*t))^2
+				sqrts sum
+				divide by # of points	
+
+- L2error() is called every time step, right after update and the value is pushed back l2_error vector <double>
+- writeError() prints out l2_error: time trace of the l2 error for the solution 

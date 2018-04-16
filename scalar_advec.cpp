@@ -508,12 +508,12 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		t += dt;
 		cout << "After update we have\n";
 		cout << "fsum = "<<fsum<<"\n";
-		l2_error.push_back(L2error(x, a, t, a_len, v));
 		for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
 		{
 			a[i] = temp[i];
 		}
 
+		l2_error.push_back(L2error(x, a, t, a_len, v));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
@@ -689,12 +689,12 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 		t += dt;
 		cout << "After update we have\n";
 		cout << "fsum = "<<fsum<<"\n";
-		l2_error.push_back(L2error(x, a, t, a_len, v));
 		for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
 		{
 			a[i] = temp[i];
 		}
 
+		l2_error.push_back(L2error(x, a, t, a_len, v));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
@@ -801,41 +801,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 			//double flux3rdOrderL(a, x, vdaj, l_face, r_face, a6j, i)
 		}	
 		cout << "Calculating Flux\n";
-		/*
-		for(int i=0; i<nx+1; i++)
-		{
-			// -----------------------Left Flux---------------------//	
-			// calculate slope and intercep to get line between j-1/2 and j-1/2 - y
-			m = vdaj[i]; // vdaj for a[ghost_num]  is vdaj[0] 
-			b = a[i+ghost_num-1]-x[i+ghost_num-1]*m;
-			// set x values for right and left of integration boundary
-			xl = x[i+ghost_num] - (dx/2.) - y ;
-			xr = x[i+ghost_num] - (dx/2.);
-			al = m*xl+b;
-			ar = l_face[i];
-			dx_trap = fabs(xl-xr);
-		
-			fl[i] = trap(dx_trap, al, ar)/y;
-			// ------------------------------------------------------//	
-
-			// -----------------------Right Flux---------------------//	
-			// calculate slope and intercep to get line between j+1/2 and j+1/2 - y
-			m = vdaj[i+1]; // vdaj for a[1] is vdaj[0]
-			b = a[i+ghost_num]-x[i+ghost_num]*m;
-			// set x values for right and left of integration boundary
-			xl = x[i+ghost_num]+ (dx/2.) - y ;
-			xr = x[i+ghost_num] + (dx/2.) ;
-			al = m*xl+b;
-			ar = r_face[i];
-			dx_trap = fabs(xl-xr);
-
-			if(i>0)
-				fr[i-1]=fl[i];
-
-			// ------------------------------------------------------//	
-		}
-		*/
-
+	
 		cout << "Update\n\n";
 		fsum = 0;
 
@@ -863,12 +829,12 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		t += dt;
 		cout << "After update we have\n";
 		cout << "fsum = "<<fsum<<"\n";
-		l2_error.push_back(L2error(x, a, t, a_len, v));
 		for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
 		{
 			a[i] = temp[i];
 		}
 
+		l2_error.push_back(L2error(x, a, t, a_len, v));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
@@ -934,7 +900,7 @@ int main(int argc,char* argv[])
 	// define dt to satisfy satisfy CFL condition
 	double dt = c*(dx/fabs(vel));
 	dt = dt; 
-	dt = .001;
+	//dt = .001;
 
 	t_final = 10;
 	//t_final = 5*dt;
@@ -1082,12 +1048,12 @@ int main(int argc,char* argv[])
 		t += dt;
 		cout << "After update we have\n";
 		cout << "fsum = "<<fsum<<"\n";
-		l2_error.push_back(L2error(x, a, t, a_len, u));
 		for(int i=ghost_num ; i < a_len-ghost_num ; i++)
 		{
 			a[i] = temp[i];
 		}
 
+		l2_error.push_back(L2error(x, a, t, a_len, u));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
