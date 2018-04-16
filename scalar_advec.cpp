@@ -190,17 +190,31 @@ double daj2(double a[], int a_len, int j )
 	// calculate the average slope in the jth zone
 	double daj_m;
 	double daj;
+
 	daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
+	
 
 	//--- monotonization ---//
-	//if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
-//		daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), (daj/fabs(daj))*2.*fabs(a[j]-a[j-1]) );
-//	else
-//		daj_m = 0;
-//	return daj_m;
+	//cout << "\ndaj before: " << daj << "\n";
+	if(0)
+	{
+		if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
+		{
+			daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), 2.*fabs(a[j+1]-a[j])) ;
+			//cout << "daj_m before: " << daj_m << "\n";
+			daj_m *= (daj/fabs(daj));
+			//cout << "daj_m after: " << daj_m << "\n";
+		}	
+		else
+		{
+			daj_m = 0;
+		}
+		return daj_m;
+	}
+	else
+		return daj;
 	//----------------------//
 
-	return daj;
 }
 
 //----------------------------------------------------------------------
@@ -291,7 +305,7 @@ double getFlux2ndOrder(double a[], double x[], int a_len, double dt, double dx, 
 }
 
 //----------------------------------------------------------------------
-double flux3rdOrderL(double a[],double x[], double vdaj[], double l_face[], double r_face[],double v, int j)
+double flux3rdOrderR(double a[],double x[],  double l_face[], double r_face[],double v, int j)
 {
 	// Calculated 3rd order flux at right membrane of jth node
 	// Only works for postive velocity!
@@ -462,6 +476,7 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		// reconstruction using <double> vector s
 		//recon(a, x, a_len, dt, v, l_face, r_face, vdaj);
 
+		/*
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
 		for(int i=1; i<=a_len-1; i++)
 			vdaj[i-1] = daj1(a, a_len, i) ; //calculate daj for each point i=j
@@ -471,6 +486,7 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.;
 			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;		
 		}
+		*/
 		//-------------------------------------------------//
 			
 		// ---------------flux calculation ----------------------//
@@ -599,12 +615,13 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << "Writing solution to file\n\n";
 		writeSolution(a,t,mass,a_len,t_start);
 
-		//-----------------------------------forward step----------------------------------//
+		//------------------------------2nd Order forward step-----------------------------//
 		//---------------------------------------------------------------------------------//
 		//--------------- reconstruction ------------------//
 		cout << "Reconstructing profile\n";
 
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
+		// vdaj OFFSET BY 1 FROM a
 		for(int i=1; i<=a_len-1; i++)
 			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
 	
@@ -790,6 +807,12 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		for(int i=1; i<=a_len-1; i++)
 			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
 
+		cout << "vdaj = [ ";
+		for(int i=0 ; i < a_len-2 ; i++)
+			cout << vdaj[i]<<" ";
+		cout << " ]\n\n";
+
+
 		// Reconstruct using eq 1.9 from Coella	
 		// assumes equal spacing in x
 		// no monotonization!!
@@ -797,10 +820,20 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << "inter_end = " << inter_end << "\n";
 		for(int i=inter_start; i<=inter_end; i++)
 		{
-			if(i<inter_end)
-				r_face[i-ghost_num] =  (7./12.)*( a[i] + a[i+1] ) - (1./12.)*( a[i+2]+a[i-1]  );
-			if(i>inter_start)	
-				l_face[i-ghost_num] = r_face[i-ghost_num-1];
+			if(0)
+			{
+				if(i<inter_end)
+					r_face[i-ghost_num] =  (7./12.)*( a[i] + a[i+1] ) - (1./12.)*( a[i+2]+a[i-1]  );
+				if(i>inter_start)	
+					l_face[i-ghost_num] = r_face[i-ghost_num-1];
+			}
+			else
+			{
+				if(i<inter_end)
+					r_face[i-ghost_num] = a[i] + (1./2.)*( a[i+1] - a[i]  ) + (1./4.)*((2./3.)*vdaj[i-1] + (2./3.)*vdaj[i-1]); // NOTE: daj for a[i+1] is vdaj[i-1]
+				if(i>inter_start)	
+					l_face[i-ghost_num] = r_face[i-ghost_num-1];
+			}
 		}
 		l_face[0] = r_face[nx-1];
 
@@ -822,7 +855,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		for(int i=0; i<=nx+1; i++)
 		{
 			if(i<nx)
-				fr[i] = flux3rdOrderL(a, x, vdaj, l_face, r_face, v, i);
+				fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
 			if(i>0)	
 				fl[i] = fr[i-1];
 		}	
@@ -830,12 +863,13 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		cout << "Calculating Flux\n";
 	
-		cout << "Update\n\n";
 		fsum = 0;
-
 		cout << "fl = [ ";
 		for(int i=0 ; i < nx ; i++)
+		{
 			cout << fl[i]<<" ";
+			fsum += fl[i];
+		}
 		cout << " ]\n\n";
 
 		cout << "fr = [ ";
@@ -843,20 +877,16 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 			cout << fr[i]<<" ";
 		cout << " ]\n\n";
 
-
+		cout << "fsum = " << fsum << "\n";
+		cout << "Update\n\n";
 		// save forward step to temporary variable
 		for(int i=inter_start;i<=inter_end-1; i++)
-		{
 			temp[i] = advect(a, dt,  dx,  v, fl, fr, i);
-			fsum =+ (fl[i-ghost_num] - fr[i-ghost_num]);
-
-		}
 
 
 		// NEED TO CONDENSE FOR READABILITY!!!!!
 		t += dt;
 		cout << "After update we have\n";
-		cout << "fsum = "<<fsum<<"\n";
 		for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
 		{
 			a[i] = temp[i];
@@ -1005,8 +1035,8 @@ int main(int argc,char* argv[])
 
 	cout << "//--------------------------STARTING SIMULATION--------------------------------//\n";
 	//solve1stOrder(a, x, dt,  dx, vel, output);
-	//solve2ndOrder(a, x, dt,  dx, vel, output);
-	solve3rdOrder(a, x, dt,  dx, vel, output);
+	solve2ndOrder(a, x, dt,  dx, vel, output);
+	//solve3rdOrder(a, x, dt,  dx, vel, output);
 
 	/*
 	//------------Run simulation------------//
