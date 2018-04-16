@@ -17,6 +17,9 @@ double t;
 int inter_start;
 int inter_end;
 double vel;
+//assumes constant dx
+double dx;
+double dt;
 
 // initialize spatiall domain
 double right_boundary;
@@ -288,7 +291,7 @@ double getFlux2ndOrder(double a[], double x[], int a_len, double dt, double dx, 
 }
 
 //----------------------------------------------------------------------
-double flux3rdOrderL(double a[],double x[], double vdaj[], double l_face[], double r_face[], double a6j, int j)
+double flux3rdOrderL(double a[],double x[], double vdaj[], double l_face[], double r_face[],double v, int j)
 {
 	// Calculated 3rd order flux at right membrane of jth node
 	// Only works for postive velocity!
@@ -298,10 +301,13 @@ double flux3rdOrderL(double a[],double x[], double vdaj[], double l_face[], doub
 		exit(0);
 	}
 
+	double y = v*dt;
 	double arj=r_face[j];
 	double alj=l_face[j];
+	double a6_j = a6j( alj, arj, a[j+ghost_num]);
+	double x_coella = y/dx;
 	double val;
-	val =  arj - (x[j+ghost_num]/2.) * ( arj - alj * (1 - (2./3.)*x[j+ghost_num])*a6j )  ;
+	val =  arj - (x_coella/2.) * ( arj - alj * (1 - (2./3.)*x_coella)*a6_j )  ;
 	return val;
 }
 //----------------------------------------------------------------------
@@ -371,7 +377,7 @@ void writeSolution(double x[], double t, double mass, int len_a, double t_start)
 double totalMass(double x[],int a_len)
 {
 	double mass = 0;
-	for(int i=2 ; i<=a_len-2 ; i++)	
+	for(int i=ghost_num ; i<=a_len-ghost_num ; i++)	
 		mass += x[i];
 	return mass;
 }
@@ -730,7 +736,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 	double l_face[nx];
 	double r_face[nx];
 	double vdaj[a_len-2];
-	double fl[nx+1];
+	double fl[nx];
 	double fr[nx];
 	double temp[a_len];
 
@@ -774,32 +780,54 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << "Writing solution to file\n\n";
 		writeSolution(a,t,mass,a_len,t_start);
 
-		//-----------------------------------forward step----------------------------------//
+		//-----------------------------3rd order forward step------------------------------//
 		//---------------------------------------------------------------------------------//
-		//--------------- reconstruction ------------------//
-		cout << "Reconstructing profile\n";
+		
 
+		//------------------ reconstruction ---------------------//
+		cout << "Reconstructing profile\n";
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
 		for(int i=1; i<=a_len-1; i++)
 			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
 
 		// Reconstruct using eq 1.9 from Coella	
+		// assumes equal spacing in x
+		// no monotonization!!
+		cout << "inter_start = " << inter_start << "\n";
+		cout << "inter_end = " << inter_end << "\n";
 		for(int i=inter_start; i<=inter_end; i++)
 		{
 			if(i<inter_end)
 				r_face[i-ghost_num] =  (7./12.)*( a[i] + a[i+1] ) - (1./12.)*( a[i+2]+a[i-1]  );
 			if(i>inter_start)	
-				l_face[i] = r_face[i-1];
+				l_face[i-ghost_num] = r_face[i-ghost_num-1];
 		}
-		//-------------------------------------------------//
-			
-		// ---------------flux calculation ----------------------//
+		l_face[0] = r_face[nx-1];
 
+		cout << "l_face = [ ";
+		for(int i=0 ; i < nx ; i++)
+			cout << l_face[i]<<" ";
+		cout << " ]\n\n";
+
+		cout << "r_face = [ ";
+		for(int i=0 ; i < nx ; i++)
+			cout << r_face[i]<<" ";
+		cout << " ]\n\n";
+		//-------------------------------------------------------//
+	
+
+		
+		// ---------------flux calculation ----------------------//
 		// ASSUMING CONSTANT DX
-		for(int i=0; i<nx+1; i++)
+		for(int i=0; i<=nx+1; i++)
 		{
-			//double flux3rdOrderL(a, x, vdaj, l_face, r_face, a6j, i)
+			if(i<nx)
+				fr[i] = flux3rdOrderL(a, x, vdaj, l_face, r_face, v, i);
+			if(i>0)	
+				fl[i] = fr[i-1];
 		}	
+		fl[0] = fr[nx-1];
+
 		cout << "Calculating Flux\n";
 	
 		cout << "Update\n\n";
@@ -895,10 +923,10 @@ int main(int argc,char* argv[])
 	// initialize spatiall domain
 	right_boundary = 2*M_PI;
 	left_boundary  = 0.;
-	double dx = (right_boundary-left_boundary)/(nx);
+	dx = (right_boundary-left_boundary)/(nx);
 
 	// define dt to satisfy satisfy CFL condition
-	double dt = c*(dx/fabs(vel));
+	dt = c*(dx/fabs(vel));
 	dt = dt; 
 	//dt = .001;
 
@@ -977,8 +1005,8 @@ int main(int argc,char* argv[])
 
 	cout << "//--------------------------STARTING SIMULATION--------------------------------//\n";
 	//solve1stOrder(a, x, dt,  dx, vel, output);
-	solve2ndOrder(a, x, dt,  dx, vel, output);
-	//solve3rdOrder(a, x, dt,  dx, vel, output);
+	//solve2ndOrder(a, x, dt,  dx, vel, output);
+	solve3rdOrder(a, x, dt,  dx, vel, output);
 
 	/*
 	//------------Run simulation------------//

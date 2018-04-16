@@ -155,6 +155,7 @@ pi = math.pi
 #We want to read in and plot 
 fileName_error = "l2_error"
 c = .5
+order = [1,2,3]
 nxs = [10,20,40,80,160,320]
 dxs = [(2.*pi)/a for a in nxs]
 orders = [2]
