@@ -205,6 +205,7 @@ for i,nx in enumerate(nxs):
 	print "l2 Error is "+str(l2[-1])
 	#print len(l2)
 
+"""
 for i,nx in enumerate(nxs):
 	name2 = fileName_error2+ str(i) + ".out"
 	with open(name2,'r') as f:
@@ -216,7 +217,7 @@ for i,nx in enumerate(nxs):
 	sims_l1.append(l1[-1])
 	#print "l1 Error is "+str(l1[-1])
 	#print len(l2)
-
+"""
 
 roc_l2 = []
 roc_l1 = []
@@ -224,8 +225,8 @@ for i,l2_er in enumerate(sims_l2):
 	if(i>0):
 		p_l2 = np.log(sims_l2[i-1]/l2_er)/np.log(2)
 		roc_l2.append(p_l2)	
-		p_l1 = np.log(sims_l1[i-1]/sims_l1[i])/np.log(2)
-		roc_l1.append(p_l1)	
+		#p_l1 = np.log(sims_l1[i-1]/sims_l1[i])/np.log(2)
+		#roc_l1.append(p_l1)	
 
 print "L2 ERROR:"
 print roc_l2

@@ -206,7 +206,7 @@ double daj2(double a[], int a_len, int j )
 	double daj_m;
 	double daj;
 
-	//daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
+	daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
 	
 	//cout << "\ndaj before: " << daj << "\n";
 
@@ -226,7 +226,8 @@ double daj2(double a[], int a_len, int j )
 			//cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
 			daj_m = 0;
 		}
-		return daj_m;
+		//return daj_m;
+		return 0.0;
 	}
 	else
 		return daj;
@@ -338,7 +339,7 @@ double flux3rdOrderR(double a[],double x[],  double l_face[], double r_face[],do
 	double a6_j = a6j( alj, arj, a[j+ghost_num]);
 	double x_coella = y/dx;
 	double val;
-	val =  arj - (x_coella/2.) * ( arj - alj * (1 - (2./3.)*x_coella)*a6_j )  ;
+	val =  arj - (x_coella/2.) * ( arj - alj - (1 - (2./3.)*x_coella)*a6_j )  ;
 	return val;
 }
 //----------------------------------------------------------------------
@@ -372,7 +373,8 @@ double advect(double a[], double dt, double dx, double v, double fl[], double fr
 	int ghost_num = 2;
 	temp=  a[i] + v * (dt/dx) * (fl[i-ghost_num] - fr[i-ghost_num]) ; //flux at the left and right membrane of the cell
 	cout << "RJL " <<a[i]<< " " << fl[i-ghost_num] << " " << fr[i-ghost_num] << "\n"; 
-
+	cout << "Temp: " << temp << "\n";
+	cout <<"v*dt/dx: " << v*dt/dx << "\n";
 	return temp;
 }
 //----------------------------------------------------------------------
@@ -885,13 +887,13 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 		// only going to work for 2nd order: need better integration for 3rd order.......
 		// ------------------------------flux calculation ----------------------//
 		// ASSUMING CONSTANT DX
-		for(int i=0; i<nx+1; i++)
+		for(int i=0; i<nx; i++)
 		{
 			fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
-			if(i<nx)	
+			if(i>nx)	
 				fl[i] = fr[i-1];
 		}	
-		fl[0] = fr[nx];
+		fl[0] = fr[nx-1];
 
 		cout << "Calculating Flux\n";
 	
@@ -1025,12 +1027,11 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		//------------------ reconstruction ---------------------//
 		cout << "Reconstructing profile\n";
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
-		//JUST MADE for(int i=1; i<=a_len-1; i++)
 		for(int i=1; i<a_len-1; i++)
 			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
 
 		cout << "vdaj = [ ";
-		for(int i=0 ; i < a_len-2 ; i++)
+		for(int i=0 ; i < a_len-ghost_num ; i++)
 			cout << vdaj[i]<<" ";
 		cout << " ]\n\n";
 
@@ -1090,9 +1091,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		{
 			fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
 			if(i>0)	
-			{
 				fl[i] = fr[i-1];
-			}
 		}	
 		fl[0] = fr[nx-1];
 
