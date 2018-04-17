@@ -87,7 +87,7 @@ def benchmark(filename, dxs):
 
 
 #---------------------------------------------------------------------------------------------------------------#
-def plotAnim():
+def plotAnim(i):
 
 		filename_sol = "scalar_advec_sol.out"
 		filename_t = "scalar_advec_t.out"
@@ -97,19 +97,19 @@ def plotAnim():
 		solutions = []
 
 
-		infile = open('scalar_advec_sol.out','r')
+		infile = open('scalar_advec_sol'+str(i)+'.out','r')
 		temp = infile.readlines()
 		for line in temp:
 			solutions.append([float(x) for x in line.split()])
 		#print solutions	
 
-		infile = open('scalar_advec_mass.out','r')
+		infile = open('scalar_advec_mass'+str(i)+'.out','r')
 		temp = infile.readlines()
 		for line in temp:
 			masses.append(float(line))
 		#print masses
 
-		infile = open('scalar_advec_t.out','r')
+		infile = open('scalar_advec_t'+str(i)+'.out','r')
 		temp = infile.readlines()
 		for line in temp:
 			times.append(float(line))
@@ -153,10 +153,14 @@ def plotAnim():
 
 pi = math.pi
 #We want to read in and plot 
-fileName_error = "l2_error"
+fileName_error1 = "l2_error"
+fileName_error2 = "l1_error"
+
 c = .5
+
 order = [1,2,3]
 nxs = [10,20,40,80,160,320]
+nxs = [16,32,64,128]
 dxs = [(2.*pi)/a for a in nxs]
 orders = [2]
 
@@ -168,12 +172,66 @@ for i, nx in enumerate(nxs):
 	os.system(cmd_1)
 	cmd_2 = "mv l2_error.out l2_error%(i)s.out" % locals()
 	os.system(cmd_2)
+	cmd_3 = "mv scalar_advec_mass.out scalar_advec_mass%(i)s.out" % locals()
+	os.system(cmd_3)
+	cmd_4 = "mv scalar_advec_sol.out scalar_advec_sol%(i)s.out" % locals()
+	os.system(cmd_4)
+	cmd_5 = "mv scalar_advec_t.out scalar_advec_t%(i)s.out" % locals()
+	os.system(cmd_5)
+	cmd_6 = "mv l1_error.out l1_error%(i)s.out" % locals()
+	os.system(cmd_6)
+	plotAnim(i) #old plotting for animation and benchmarking
+
+
+#benchmark(fileName_error, dxs)
+
+#---------------READ IN ERRORS---------------------#
+sims_l2 = []
+sims_l1 = []
+dts1 = []
+dts2 = []
+numSim = len(nxs)
+
+#try:
+for i,nx in enumerate(nxs):
+	name1 = fileName_error1+ str(i) + ".out"
+	with open(name1,'r') as f:
+		dt = f.readline().splitlines()
+		print "dt is " + str(dt)
+		f.close() 
+	#print np.loadtxt(name1,skiprows=1).T 
+	l2 = np.loadtxt(name1,skiprows=1).T
+	sims_l2.append(l2[-1])
+	print "l2 Error is "+str(l2[-1])
+	#print len(l2)
+
+for i,nx in enumerate(nxs):
+	name2 = fileName_error2+ str(i) + ".out"
+	with open(name2,'r') as f:
+		dt = f.readline().splitlines()
+		#print "dt is " + str(dt)
+		f.close() 
+	#print np.loadtxt(name1,skiprows=1).T 
+	l1 = np.loadtxt(name1,skiprows=1).T
+	sims_l1.append(l1[-1])
+	#print "l1 Error is "+str(l1[-1])
+	#print len(l2)
+
+
+roc_l2 = []
+roc_l1 = []
+for i,l2_er in enumerate(sims_l2):
+	if(i>0):
+		p_l2 = np.log(sims_l2[i-1]/l2_er)/np.log(2)
+		roc_l2.append(p_l2)	
+		p_l1 = np.log(sims_l1[i-1]/sims_l1[i])/np.log(2)
+		roc_l1.append(p_l1)	
+
+print "L2 ERROR:"
+print roc_l2
+#print "L1 ERROR:"
+#print roc_l1
+
+
 #plotError(fileName_error,nxs)
-
-benchmark(fileName_error, dxs)
-
-#exit(0)
- 
-plotAnim()
-
 

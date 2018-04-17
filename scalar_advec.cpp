@@ -129,10 +129,20 @@ double L2error(double x[], double a[], double t, int len_a, double u)
 		L2_error += pow(a[i] - sin(x[i]+u*t), 2.);
 		cout << pow(a[i] - sin(x[i]+u*t), 2.) << "\n";
 	}
+	L2_error /= nx;
 	L2_error = pow(L2_error,.5);
-	L2_error /= (len_a-ghost_num*2);
 	return L2_error;
 }
+//----------------------------------------------------------------------
+double L1error(double x[], double a[], double t, int len_a, double u)
+{
+	double L1_error=0;
+	for(int i=ghost_num;i<len_a-ghost_num;i++)
+		L1_error += fabs(a[i] - sin(x[i]+u*t));
+	L1_error /= nx;
+	return L1_error;
+}
+
 
 //*
 void writeError(vector<double> &error, int len_a, string output,double dt)
@@ -175,9 +185,14 @@ double daj1(double a[], int a_len, int j )
 	daj =  (a[j+1] - a[j] + a[j] - a[j-1] )/2.;
 
 	if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
-		daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), (daj/fabs(daj))*2.*fabs(a[j]-a[j-1]) );
+	{
+		daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), 2.*fabs(a[j]-a[j+1]) );
+		daj_m *= (daj/fabs(daj));
+	}
 	else
+	{
 		daj_m = 0;
+	}
 	return daj_m;
 }
 
@@ -400,7 +415,7 @@ double totalMass(double x[],int a_len)
 
 //---------------------1st order Solver--------------------------------------------------//
 // with monotonizing and averaging
-void solve1stOrder(double a[], double x[], double dt, double dx, double v, string output)
+void solve1stOrder(double a[], double x[], double dt, double dx, double v, string output1, string output2)
 {
 	/*
 	vector<double> l_face;
@@ -425,21 +440,12 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 	double sum;
 	int n=0;
 	vector<double> l2_error;
+	vector<double> l1_error;
 	t = 0;
 	ghost_num = 2; //SHOULD BE 2
 	
 	while (t<t_final)
 	{
-		// clear vectors for new timestep	
-		/*
-		vdaj.clear();
-		fl.clear();
-		fr.clear();
-		temp.clear();
-		l_face.clear();
-		r_face.clear();
-		*/
-
 		//	continue iterating through time while step n is less than step total
 	
 		cout<< "//------------t = "<< t <<"------------//\n";	
@@ -489,7 +495,7 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		*/
 		//-------------------------------------------------//
 			
-		// ---------------flux calculation ----------------------//
+		// --------------- 1st order flux calculation ----------------------//
 		cout << "Calculating Flux\n";
 		for(int i=0; i<nx; i++)
 			fl[i] = a[i+ghost_num-1];
@@ -498,13 +504,8 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 			fr[i] = a[i+ghost_num];
 		// ------------------------------------------------------//	
 
-		//use <double> vectors
-		//fsum =  getFlux2ndOrder(a, x, a_len, dt, dx, v, l_face,	r_face, vdaj,fl,fr);
-		//fsum =  getFlux1stOrder(a, x, a_len, dt, dx, v, l_face,	r_face, vdaj,fl,fr);
 
-		cout << "Update\n\n";
-		fsum = 0;
-
+		// Print Left and Right Fluxes for all nodes
 		cout << "fl = [ ";
 		for(int i=0 ; i < nx ; i++)
 			cout << fl[i]<<" ";
@@ -516,14 +517,15 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << " ]\n\n";
 
 
+		cout << "Update\n\n";
 		// save forward step to temporary variable
+		fsum = 0;
 		for(int i=inter_start;i<=inter_end-1; i++)
 		{
 			temp[i] = advect(a, dt,  dx,  v, fl, fr, i);
 			fsum =+ (fl[i-ghost_num] - fr[i-ghost_num]);
 
 		}
-		//temp = advectV(a, dt, dx, v, fl, fr);
 
 
 		// NEED TO CONDENSE FOR READABILITY!!!!!
@@ -542,11 +544,18 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << " ]\n";
 		
 
-		// debug printout	
-		cout << "a = [ ";
-		for(int i=0 ; i < a_len ; i++)
-			cout << a[i]<<" ";
+		l1_error.push_back(L1error(x, a, t, a_len, v));
+		cout << "l1_error = [ ";
+		for(int i=0 ; i < l2_error.size() ; i++)
+			cout << l1_error[i]<<" ";
 		cout << " ]\n";
+		
+
+		// debug printout	
+		//cout << "a = [ ";
+		//for(int i=0 ; i < a_len ; i++)
+	//		cout << a[i]<<" ";
+	//	cout << " ]\n";
 		
 		mass = totalMass(a, a_len);
 		cout << "Total mass is: " << mass << "\n";
@@ -557,7 +566,8 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		//-------------------------------------------------//
 		// Write L2 error
-		writeError(l2_error, a_len, output, dt);
+		writeError(l2_error, a_len, output1, dt);
+		writeError(l2_error, a_len, output1, dt);
 
 	}
 	//end of while loop
@@ -566,7 +576,7 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 
 //---------------------2nd order solveSolver--------------------------------------------------//
 // with monotonizing and averaging
-void solve2ndOrder(double a[], double x[], double dt, double dx, double v, string output)
+void solve2ndOrder(double a[], double x[], double dt, double dx, double v, string output1, string output2)
 {
 	double l_face[nx];
 	double r_face[nx];
@@ -583,6 +593,201 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 	double sum;
 	int n=0;
 	vector<double> l2_error;
+	vector<double> l1_error;
+	t = 0;
+	ghost_num = 2; //SHOULD BE 2
+	
+	while (t<t_final)
+	{
+		//	continue iterating through time while step n is less than step total
+	
+		cout<< "//------------t = "<< t <<"------------//\n";	
+		cout << "a = [ ";
+		for(int i=0 ; i < a_len ; i++)
+			cout << a[i]<<" ";
+		cout << " ]\n\n";
+		
+		// 	set ghost cells
+		cout << "Ghost update:\n";
+		for(int i=0; i<ghost_num;i++)
+		{
+				cout << "Setting a[" << i << "] to a["<<a_len-1-ghost_num-i <<"]\n";
+				cout << "Setting a[" << a_len-1-i<< "] to a["<<ghost_num+i <<"]\n\n";
+				a[ghost_num-1-i] = a[a_len-1-ghost_num-i];
+				a[a_len-ghost_num+i] = a[ghost_num+i];
+		}
+		cout << "a = [ ";
+		for(int i=0 ; i < a_len ; i++)
+			cout << a[i]<<" ";
+		cout << " ]\n\n";
+
+
+		// write solution to file
+		cout << "Writing solution to file\n\n";
+		writeSolution(a,t,mass,a_len,t_start);
+
+		//------------------------------2nd Order forward step-----------------------------//
+		//---------------------------------------------------------------------------------//
+		//--------------- reconstruction ------------------//
+		cout << "Reconstructing profile\n";
+
+		// need to initialize vdaj in main and pass in EMPTY VECTOR
+		// vdaj OFFSET BY 1 FROM a
+		for(int i=1; i<=a_len-1; i++)
+			vdaj[i-1] = daj1(a, a_len, i) ; //calculate daj for each point i=j
+	
+		for(int i=inter_start; i<=inter_end; i++)
+		{
+			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.;
+			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;		
+		}
+		//-------------------------------------------------//
+			
+		// ---------------flux calculation ----------------------//
+
+
+		// calculate domain of dependence
+		// ASSUMING CONSTANT DX
+		// v is scalar and dt is static
+		// only going to work for 2nd order: need better integration for 3rd order.......
+
+		double y = v*dt;
+		double al;
+		double ar;
+		double m;
+		double b;
+		double xl;
+		double xr;
+		double dx_trap;
+
+
+		cout << "Calculating Flux\n";
+		//*
+		for(int i=0; i<nx+1; i++)
+		{
+			//ITERATING THROUGH NX+1 WILL CREATE EXTRA FL VALUE BUT THAT DONT MATTER
+			// -----------------------Left Flux---------------------//	
+			// calculate slope and intercep to get line between j-1/2 and j-1/2 - y
+			m = vdaj[i]; // vdaj for a[1]  is vdaj[0] 
+			b = a[i+ghost_num-1]-x[i+ghost_num-1]*m;
+			// set x values for right and left of integration boundary
+			xl = x[i+ghost_num] - (dx/2.) - y ;
+			xr = x[i+ghost_num] - (dx/2.);
+			al = m*xl+b;
+			ar = l_face[i];
+			dx_trap = fabs(xl-xr);
+		
+			fl[i] = trap(dx_trap, al, ar)/y;
+			// ------------------------------------------------------//	
+
+			// -----------------------Right Flux---------------------//	
+			// calculate slope and intercep to get line between j+1/2 and j+1/2 - y
+			m = vdaj[i+1]; // vdaj for a[1] is vdaj[0]
+			b = a[i+ghost_num]-x[i+ghost_num]*m;
+			// set x values for right and left of integration boundary
+			xl = x[i+ghost_num]+ (dx/2.) - y ;
+			xr = x[i+ghost_num] + (dx/2.) ;
+			al = m*xl+b;
+			ar = r_face[i];
+			dx_trap = fabs(xl-xr);
+
+			if(i>0)
+			{
+				fr[i-1]=fl[i];
+			}
+
+			// ------------------------------------------------------//	
+		}
+
+		cout << "Update\n\n";
+		fsum = 0;
+
+		cout << "fl = [ ";
+		for(int i=0 ; i < nx ; i++)
+			cout << fl[i]<<" ";
+		cout << " ]\n\n";
+
+		cout << "fr = [ ";
+		for(int i=0 ; i < nx ; i++)
+			cout << fr[i]<<" ";
+		cout << " ]\n\n";
+
+
+		// save forward step to temporary variable
+		for(int i=inter_start;i<inter_end; i++)
+		{
+			temp[i] = advect(a, dt,  dx,  v, fl, fr, i);
+			fsum =+ (fl[i-ghost_num] - fr[i-ghost_num]);
+
+		}
+
+
+		// NEED TO CONDENSE FOR READABILITY!!!!!
+		t += dt;
+		cout << "After update we have\n";
+		cout << "fsum = "<<fsum<<"\n";
+		for(int i=inter_start;i<inter_end; i++)
+		{
+			a[i] = temp[i];
+		}
+
+		l2_error.push_back(L2error(x, a, t, a_len, v));
+		cout << "l2_error = [ ";
+		for(int i=0 ; i < l2_error.size() ; i++)
+			cout << l2_error[i]<<" ";
+		cout << " ]\n";
+		
+		l1_error.push_back(L1error(x, a, t, a_len, v));
+		cout << "l1_error = [ ";
+		for(int i=0 ; i < l2_error.size() ; i++)
+			cout << l1_error[i]<<" ";
+		cout << " ]\n";
+		
+
+		// debug printout	
+		cout << "a = [ ";
+		for(int i=0 ; i < a_len ; i++)
+			cout << a[i]<<" ";
+		cout << " ]\n";
+		
+		mass = totalMass(a, a_len);
+		cout << "Total mass is: " << mass << "\n";
+		
+		n++;
+		cout << "\n";
+		cout<< "//----------------------------------------------------//\n";	
+
+		//-------------------------------------------------//
+		// Write L2 error
+		writeError(l2_error, a_len, output1, dt);
+		writeError(l1_error, a_len, output2, dt);
+
+	}
+	//end of while loop
+}
+//----------------------------------------------------------------------
+
+//---------------------3rd order solveSolver--------------------------------------------------//
+// modeled after 2nd
+// with monotonizing and averaging
+void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, string output1, string output2)
+{
+	double l_face[nx];
+	double r_face[nx];
+	double vdaj[a_len-2];
+	double fl[nx+1];
+	double fr[nx];
+	double temp[a_len];
+
+	// set index variables
+	inter_start = ghost_num;
+	inter_end = a_len-ghost_num;
+	double mass;
+	double fsum;
+	double sum;
+	int n=0;
+	vector<double> l2_error;
+	vector<double> l1_error;
 	t = 0;
 	ghost_num = 2; //SHOULD BE 2
 	
@@ -625,13 +830,51 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 		for(int i=1; i<=a_len-1; i++)
 			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
 	
+		cout << "vdaj = [ ";
+		for(int i=0 ; i < a_len-2 ; i++)
+			cout << vdaj[i]<<" ";
+		cout << " ]\n\n";
+
+
+		// Reconstruct using eq 1.9 from Coella	
+		// assumes equal spacing in x
+		cout << "inter_start = " << inter_start << "\n";
+		cout << "inter_end = " << inter_end << "\n";
+
+
 		for(int i=inter_start; i<=inter_end; i++)
 		{
-			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.;
-			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;		
+			if(0)
+			{
+				if(i<inter_end)
+					r_face[i-ghost_num] =  (7./12.)*( a[i] + a[i+1] ) - (1./12.)*( a[i+2]+a[i-1]  );
+				if(i>inter_start)	
+					l_face[i-ghost_num] = r_face[i-ghost_num-1];
+			}
+			else
+			{
+				if(i<inter_end)
+					r_face[i-ghost_num] = a[i] + (1./2.)*( a[i+1] - a[i]  ) + (1./4.)*((2./3.)*vdaj[i-1] + (2./3.)*vdaj[i-1]); // NOTE: daj for a[i+1] is vdaj[i-1]
+				if(i>inter_start)	
+					l_face[i-ghost_num] = r_face[i-ghost_num-1];
+			}
 		}
+		l_face[0] = r_face[nx-1];
+
+		cout << "l_face = [ ";
+		for(int i=0 ; i < nx ; i++)
+			cout << l_face[i]<<" ";
+		cout << " ]\n\n";
+
+		cout << "r_face = [ ";
+		for(int i=0 ; i < nx ; i++)
+			cout << r_face[i]<<" ";
+		cout << " ]\n\n";
+
 		//-------------------------------------------------//
-			
+		
+
+	
 		// ---------------flux calculation ----------------------//
 
 
@@ -654,9 +897,10 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 		//*
 		for(int i=0; i<nx+1; i++)
 		{
+			//ITERATING THROUGH NX+1 WILL CREATE EXTRA FL VALUE BUT THAT DONT MATTER
 			// -----------------------Left Flux---------------------//	
 			// calculate slope and intercep to get line between j-1/2 and j-1/2 - y
-			m = vdaj[i]; // vdaj for a[ghost_num]  is vdaj[0] 
+			m = vdaj[i]; // vdaj for a[1]  is vdaj[0] 
 			b = a[i+ghost_num-1]-x[i+ghost_num-1]*m;
 			// set x values for right and left of integration boundary
 			xl = x[i+ghost_num] - (dx/2.) - y ;
@@ -668,6 +912,7 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 			fl[i] = trap(dx_trap, al, ar)/y;
 			// ------------------------------------------------------//	
 
+			/*
 			// -----------------------Right Flux---------------------//	
 			// calculate slope and intercep to get line between j+1/2 and j+1/2 - y
 			m = vdaj[i+1]; // vdaj for a[1] is vdaj[0]
@@ -680,8 +925,10 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 			dx_trap = fabs(xl-xr);
 
 			if(i>0)
+			{
 				fr[i-1]=fl[i];
-
+			}
+			*/
 			// ------------------------------------------------------//	
 		}
 
@@ -700,7 +947,7 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 
 
 		// save forward step to temporary variable
-		for(int i=inter_start;i<=inter_end-1; i++)
+		for(int i=inter_start;i<inter_end; i++)
 		{
 			temp[i] = advect(a, dt,  dx,  v, fl, fr, i);
 			fsum =+ (fl[i-ghost_num] - fr[i-ghost_num]);
@@ -712,7 +959,7 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 		t += dt;
 		cout << "After update we have\n";
 		cout << "fsum = "<<fsum<<"\n";
-		for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
+		for(int i=inter_start;i<inter_end; i++)
 		{
 			a[i] = temp[i];
 		}
@@ -723,6 +970,14 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 			cout << l2_error[i]<<" ";
 		cout << " ]\n";
 		
+
+		l1_error.push_back(L2error(x, a, t, a_len, v));
+		cout << "l1_error = [ ";
+		for(int i=0 ; i < l1_error.size() ; i++)
+			cout << l1_error[i]<<" ";
+		cout << " ]\n";
+		
+
 
 		// debug printout	
 		cout << "a = [ ";
@@ -739,12 +994,14 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		//-------------------------------------------------//
 		// Write L2 error
-		writeError(l2_error, a_len, output, dt);
+		writeError(l2_error, a_len, output1, dt);
+		writeError(l1_error, a_len, output2, dt);
 
 	}
 	//end of while loop
 }
 //----------------------------------------------------------------------
+
 
 //---------------------3rd order Solver--------------------------------------------------//
 // with monotonizing and averaging
@@ -850,7 +1107,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 	
 
 		
-		// ---------------flux calculation ----------------------//
+		// ------------------------------flux calculation ----------------------//
 		// ASSUMING CONSTANT DX
 		for(int i=0; i<=nx+1; i++)
 		{
@@ -876,6 +1133,9 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		for(int i=0 ; i < nx ; i++)
 			cout << fr[i]<<" ";
 		cout << " ]\n\n";
+		// ------------------------------flux calculation ----------------------//
+
+
 
 		cout << "fsum = " << fsum << "\n";
 		cout << "Update\n\n";
@@ -945,7 +1205,7 @@ int main(int argc,char* argv[])
     {
 		nx = atof(argv[1]);
 		c = atof(argv[2]);
-		cout << "given nx = " << atof(argv[1]) << " and c = " << atof(argv[2]) << "\n";
+		cout << "given nx = " << nx << " and c = " << c << "\n";
     }
 
 	a_len = nx+(2*ghost_num); // defined length of solution/ghost node vector
@@ -958,9 +1218,8 @@ int main(int argc,char* argv[])
 	// define dt to satisfy satisfy CFL condition
 	dt = c*(dx/fabs(vel));
 	dt = dt; 
-	//dt = .001;
 
-	t_final = 10;
+	t_final = 5;
 	//t_final = 5*dt;
 	t_start = 0.;
 
@@ -991,7 +1250,7 @@ int main(int argc,char* argv[])
 	for(int i=0 ; i<=a_len-1 ; i++)
 		a[i] = sin(x[i]);
 
-	cout << "RJL2 " << a_len << "\n";
+	//cout << "RJL2 " << a_len << "\n";
 
 	//	Initialize Simulation Variables
 	double mass;
@@ -1004,8 +1263,8 @@ int main(int argc,char* argv[])
     int n = 0;
 	double t = t_start;
 	double fsum;
-	vector<double> l2_error;
-	string output = "l2_error";		
+	string output1 = "l2_error";		
+	string output2 = "l1_error";		
 
 	//print out arrays for verification	
 	/*
@@ -1034,9 +1293,10 @@ int main(int argc,char* argv[])
 		cout << " ]\n\n";
 
 	cout << "//--------------------------STARTING SIMULATION--------------------------------//\n";
-	//solve1stOrder(a, x, dt,  dx, vel, output);
-	solve2ndOrder(a, x, dt,  dx, vel, output);
-	//solve3rdOrder(a, x, dt,  dx, vel, output);
+	//solve1stOrder(a, x, dt,  dx, vel, output1, output2);
+	//solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
+	solve3rdOrder_new(a, x, dt,  dx, vel, output1, output2);
+	//solve3rdOrder(a, x, dt,  dx, vel, output1);
 
 	/*
 	//------------Run simulation------------//
