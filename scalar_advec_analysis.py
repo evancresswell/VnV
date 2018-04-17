@@ -180,10 +180,10 @@ for i, nx in enumerate(nxs):
 	os.system(cmd_5)
 	cmd_6 = "mv l1_error.out l1_error%(i)s.out" % locals()
 	os.system(cmd_6)
-	plotAnim(i) #old plotting for animation and benchmarking
+	#plotAnim(i) #old plotting for animation and benchmarking
 
 
-#benchmark(fileName_error, dxs)
+benchmark(fileName_error1, dxs)
 
 #---------------READ IN ERRORS---------------------#
 sims_l2 = []
@@ -234,5 +234,5 @@ print roc_l2
 #print roc_l1
 
 
-#plotError(fileName_error,nxs)
+#plotError(fileName_error1,nxs)
 

@@ -121,25 +121,33 @@ double membrane_flux_parabolic(double x, double y1, double y2, double y3, double
 }
 
 //----------------------------------------------------------------------
-double L2error(double x[], double a[], double t, int len_a, double u)
+double L2error(double x[], double a[], double t, double dx, int len_a, double u)
 {
 	double L2_error=0;
+	double analytical = 0;
+	double difference = 0;
 	for(int i=ghost_num;i<len_a-ghost_num;i++)
 	{
-		L2_error += pow(a[i] - sin(x[i]+u*t), 2.);
-		cout << pow(a[i] - sin(x[i]+u*t), 2.) << "\n";
+		analytical = sin(x[i] - u * t);
+		difference = analytical - a[i];
+		L2_error += pow(difference * dx, 2.);
+		// cout << pow(a[i] - sin(x[i]-u*t), 2.) << "\n";
 	}
-	L2_error *= dx;
-	L2_error = pow(L2_error,.5);
+	L2_error = sqrt(L2_error);
 	return L2_error;
 }
 //----------------------------------------------------------------------
-double L1error(double x[], double a[], double t, int len_a, double u)
+double L1error(double x[], double a[], double t, double dx, int len_a, double u)
 {
 	double L1_error=0;
-	for(int i=ghost_num;i<len_a-ghost_num;i++)
-		L1_error += fabs(a[i] - sin(x[i]+u*t));
-	L1_error /= nx;
+	double analytical = 0;
+	double difference = 0;
+	for(int i=ghost_num;i<len_a-ghost_num;i++){
+		analytical = sin(x[i] - u * t);
+		difference = analytical - a[i];
+		L1_error += fabs(difference * dx);
+	}
+	// L1_error /= nx;
 	return L1_error;
 }
 
@@ -358,8 +366,6 @@ vector<double> advectV(double a[], double dt, double dx, double v, vector<double
 		temp.push_back( a[i] + v * (dt/dx) * (fl[i-ghost_num] - fr[i-ghost_num+1]) ); //flux at the left and right membrane of the cell
 		sum =+ (fl[i-ghost_num] - fl[i-ghost_num+1]);
 	}
-
-	cout << "Sum of TEMP vector is: " << sum << "\n";
 	return temp;
 }
 //----------------------------------------------------------------------
@@ -410,8 +416,9 @@ void writeSolution(double x[], double t, double mass, int len_a, double t_start)
 double totalMass(double x[],int a_len)
 {
 	double mass = 0;
-	for(int i=ghost_num ; i<=a_len-ghost_num ; i++)	
-		mass += x[i];
+	for(int i = ghost_num ; i < a_len-ghost_num ; i++)	
+		mass += x[i] * dx;
+	// cout << dx << endl;
 	return mass;
 }
 
@@ -453,6 +460,7 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		//	continue iterating through time while step n is less than step total
 	
 		cout<< "//------------t = "<< t <<"------------//\n";	
+		/*
 		cout << "a = [ ";
 		for(int i=0 ; i < a_len ; i++)
 			cout << a[i]<<" ";
@@ -460,17 +468,18 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		
 		// 	set ghost cells
 		cout << "Ghost update:\n";
+		*/
 		for(int i=0; i<ghost_num;i++)
 		{
-				cout << "Setting a[" << i << "] to a["<<a_len-1-ghost_num-i <<"]\n";
-				cout << "Setting a[" << a_len-1-i<< "] to a["<<ghost_num+i <<"]\n\n";
+				// cout << "Setting a[" << i << "] to a["<<a_len-1-ghost_num-i <<"]\n";
+				// cout << "Setting a[" << a_len-1-i<< "] to a["<<ghost_num+i <<"]\n\n";
 				a[ghost_num-1-i] = a[a_len-1-ghost_num-i];
 				a[a_len-ghost_num+i] = a[ghost_num+i];
 		}
-		cout << "a = [ ";
-		for(int i=0 ; i < a_len ; i++)
-			cout << a[i]<<" ";
-		cout << " ]\n\n";
+		// cout << "a = [ ";
+		// for(int i=0 ; i < a_len ; i++)
+		//	cout << a[i]<<" ";
+		// cout << " ]\n\n";
 
 
 		// write solution to file
@@ -536,19 +545,21 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		t += dt;
 		cout << "After update we have\n";
 		cout << "fsum = "<<fsum<<"\n";
-		for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
+		//for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
+		for(int i=inter_start ; i <= inter_end-1 ; i++)
 		{
 			a[i] = temp[i];
 		}
 
-		l2_error.push_back(L2error(x, a, t, a_len, v));
+		l2_error.push_back(L2error(x, a, t, dx, a_len, v));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
 		cout << " ]\n";
 		
 
-		l1_error.push_back(L1error(x, a, t, a_len, v));
+		//l1_error.push_back(L1error(x, a, t, a_len, v));
+		l1_error.push_back(L1error(x, a, t, dx, a_len, v));
 		cout << "l1_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l1_error[i]<<" ";
@@ -568,13 +579,14 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << "\n";
 		cout<< "//----------------------------------------------------//\n";	
 
-		//-------------------------------------------------//
-		// Write L2 error
-		writeError(l2_error, a_len, output1, dt);
-		writeError(l2_error, a_len, output1, dt);
-
 	}
 	//end of while loop
+	//-------------------------------------------------//
+	// Write L2 error
+	writeError(l2_error, a_len, output1, dt);
+	writeError(l1_error, a_len, output2, dt);
+
+
 }
 //----------------------------------------------------------------------
 
@@ -637,14 +649,17 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
 		// vdaj OFFSET BY 1 FROM a
-		for(int i=1; i<a_len-1; i++)
+		for(int i=1; i<=a_len-1; i++)
 			vdaj[i-1] = daj1(a, a_len, i) ; //calculate daj for each point i=j
 	
-		for(int i=inter_start; i<=inter_end; i++)
+		//for(int i=inter_start; i<inter_end; i++)
+		for(int i=inter_start; i<=inter_end; i++) // PHIL NOTES 
 		{
-			// vdaj OFFSET BY 1 FROM a
-			l_face[i-ghost_num] =  a[i]-vdaj[i-1]/2.;
-			r_face[i-ghost_num] =  a[i]+vdaj[i-1]/2.;		
+			// vdaj OFFSET BY 1 FROM a 
+			//l_face[i-ghost_num] =  a[i]-vdaj[i-1]/2.;
+			//r_face[i-ghost_num] =  a[i]+vdaj[i-1]/2.;		
+			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.; // PHIL NOTES
+			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;
 		}
 		//-------------------------------------------------//
 			
@@ -736,13 +751,15 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 			a[i] = temp[i];
 		}
 
-		l2_error.push_back(L2error(x, a, t, a_len, v));
+		//l2_error.push_back(L2error(x, a, t, a_len, v));
+		l2_error.push_back(L2error(x, a, t, dx, a_len, v));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
 		cout << " ]\n";
 		
-		l1_error.push_back(L1error(x, a, t, a_len, v));
+		//l1_error.push_back(L1error(x, a, t, a_len, v));
+		l1_error.push_back(L1error(x, a, t, dx, a_len, v));
 		cout << "l1_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l1_error[i]<<" ";
@@ -930,14 +947,15 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 			a[i] = temp[i];
 		}
 
-		l2_error.push_back(L2error(x, a, t, a_len, v));
+		//l2_error.push_back(L2error(x, a, t, a_len, v));
+		l2_error.push_back(L2error(x, a, t, dx, a_len, v));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
 		cout << " ]\n";
 		
 
-		l1_error.push_back(L2error(x, a, t, a_len, v));
+		l1_error.push_back(L1error(x, a, t, dx, a_len, v));
 		cout << "l1_error = [ ";
 		for(int i=0 ; i < l1_error.size() ; i++)
 			cout << l1_error[i]<<" ";
@@ -1131,7 +1149,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 			a[i] = temp[i];
 		}
 
-		l2_error.push_back(L2error(x, a, t, a_len, v));
+		l2_error.push_back(L2error(x, a, t, dx, a_len, v));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
@@ -1195,7 +1213,7 @@ int main(int argc,char* argv[])
 
 	// define dt to satisfy satisfy CFL condition
 	dt = c*(dx/fabs(vel));
-	
+	//dt =.01;
 	t_final = 5;
 	//t_final = 5*dt;
 	t_start = 0.;
@@ -1250,9 +1268,9 @@ int main(int argc,char* argv[])
 
 	cout << "//--------------------------STARTING SIMULATION--------------------------------//\n";
 	//solve1stOrder(a, x, dt,  dx, vel, output1, output2);
-	//solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
+	solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
 	//solve3rdOrder_new(a, x, dt,  dx, vel, output1, output2);
-	solve3rdOrder(a, x, dt,  dx, vel, output1);
+	//solve3rdOrder(a, x, dt,  dx, vel, output1);
 
 
 
