@@ -81,6 +81,8 @@ nx=20
 orders = [2]
 i=0
 print i
+cmd_compile = "g++ scalar_advec.cpp -o scalar_advec" 
+os.system(cmd_compile)
 cmd_1 = "./scalar_advec %(nx)s %(c)s > o" % locals()
 os.system(cmd_1)
 cmd_2 = "mv l2_error.out l2_error%(i)s.out" % locals()

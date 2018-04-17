@@ -206,24 +206,24 @@ double daj2(double a[], int a_len, int j )
 	double daj_m;
 	double daj;
 
-	daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
+	//daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
 	
 	//cout << "\ndaj before: " << daj << "\n";
 
 	//--- monotonization ---//
-	cout << "\ndaj before: " << daj << "\n";
+	//cout << "\ndaj before: " << daj << "\n";
 	if(1)
 	{
 		if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
 		{
 			daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), 2.*fabs(a[j+1]-a[j])) ;
-			cout << "daj_m before: " << daj_m << "\n";
+			//cout << "daj_m before: " << daj_m << "\n";
 			daj_m *= (daj/fabs(daj));
-			cout << "daj_m after: " << daj_m << "\n";
+			//cout << "daj_m after: " << daj_m << "\n";
 		}	
 		else
 		{
-			cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
+			//cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
 			daj_m = 0;
 		}
 		return daj_m;
@@ -635,13 +635,14 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
 		// vdaj OFFSET BY 1 FROM a
-		for(int i=1; i<=a_len-1; i++)
+		for(int i=1; i<a_len-1; i++)
 			vdaj[i-1] = daj1(a, a_len, i) ; //calculate daj for each point i=j
 	
 		for(int i=inter_start; i<=inter_end; i++)
 		{
-			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.;
-			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;		
+			// vdaj OFFSET BY 1 FROM a
+			l_face[i-ghost_num] =  a[i]-vdaj[i-1]/2.;
+			r_face[i-ghost_num] =  a[i]+vdaj[i-1]/2.;		
 		}
 		//-------------------------------------------------//
 			
@@ -971,7 +972,7 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 void solve3rdOrder(double a[], double x[], double dt, double dx, double v, string output)
 {
 	double l_face[nx];
-	double r_face[nx+1];
+	double r_face[nx];
 	double vdaj[a_len-2];
 	double fl[nx];
 	double fr[nx+1];
@@ -1039,7 +1040,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		// no monotonization!!
 		cout << "inter_start = " << inter_start << "\n";
 		cout << "inter_end = " << inter_end << "\n";
-		for(int i=inter_start; i<=inter_end; i++)
+		for(int i=inter_start; i<inter_end; i++)
 		{
 			if(0)
 			{
@@ -1056,7 +1057,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 					l_face[i-ghost_num] = r_face[i-ghost_num-1];
 			}
 		}
-		l_face[0] = r_face[nx];
+		l_face[0] = r_face[nx-1];
 
 		cout << "l_face = [ ";
 		for(int i=0 ; i < nx ; i++)
@@ -1119,14 +1120,14 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << "fsum = " << fsum << "\n";
 		cout << "Update\n\n";
 		// save forward step to temporary variable
-		for(int i=inter_start;i<=inter_end-1; i++)
+		for(int i=inter_start;i<inter_end; i++)
 			temp[i] = advect(a, dt,  dx,  v, fl, fr, i);
 
 
 		// NEED TO CONDENSE FOR READABILITY!!!!!
 		t += dt;
 		cout << "After update we have\n";
-		for(int i=ghost_num ; i <= a_len-ghost_num ; i++)
+		for(int i=inter_start ; i<inter_end ; i++)
 		{
 			a[i] = temp[i];
 		}
@@ -1173,10 +1174,9 @@ int main(int argc,char* argv[])
 	// initialize simulations parameters
 	int write_freq=1;
 	vel = 1.0; // velocity
-	nx=10; // number of nodes
-	double c = .5;  //Courant number
 	ghost_num = 2;
-	int counter;
+	double c;
+	
 	// read in command line arguments. pass nx and c
     if(argc==1)
         cout << "\nNo Extra Command Line Argument, using default nx and c";
@@ -1196,8 +1196,7 @@ int main(int argc,char* argv[])
 
 	// define dt to satisfy satisfy CFL condition
 	dt = c*(dx/fabs(vel));
-	dt = dt; 
-
+	
 	t_final = 5;
 	//t_final = 5*dt;
 	t_start = 0.;
@@ -1216,49 +1215,28 @@ int main(int argc,char* argv[])
 	double a[a_len];
 	double mem[a_len-1];
 	double x[a_len];
-	 
+	string output1 = "l2_error";		
+	string output2 = "l1_error";		
+
+    int n = 0;
+	double t = t_start;
+	double fsum;
+	double mass;
+
+
+ 
 	 
 	for(int i=0 ; i<=a_len-1 ; i++)
 	{
 		x[i] = left_boundary + i*dx;
 		x[i] = x[i] - (((ghost_num - 1)+ 0.5) * dx) ;
-
 	}
 	
 	//iterate through cells not boundary
-	for(int i=0 ; i<=a_len-1 ; i++)
+	for(int i=0 ; i<a_len ; i++)
 		a[i] = sin(x[i]);
 
 	//cout << "RJL2 " << a_len << "\n";
-
-	//	Initialize Simulation Variables
-	double mass;
-	double temp[a_len]; //temp variable to hold a^n+1 during computation
-	double xi[a_len]; //interpolation variable 
-	double flux[a_len-1];
-	double fluxR[a_len-2*ghost_num];
-	double fluxL[a_len-2*ghost_num];
-
-    int n = 0;
-	double t = t_start;
-	double fsum;
-	string output1 = "l2_error";		
-	string output2 = "l1_error";		
-
-	//print out arrays for verification	
-	/*
-	cout << "Spatial domain: \n";
-	for(int i=0 ; i<a_len ; i++)
-	{
-		cout << "x["<<i-1<<"] = "<<x[i]<<"\n";
-		cout << "a["<<i-1<<",0] = "<<a[i]<<"\n\n";
-	}
-	for(int i=0 ; i<nstep+1 ; i++)
-	{
-		cout << "Time domain: \n";
-		cout << "t = "<<t_start+i*dt<<"\n";
-	}
-	*/
 
 	cout << "Initial Condition\n";	
 	cout << "t = "<<t<<"\n";
@@ -1277,9 +1255,35 @@ int main(int argc,char* argv[])
 	//solve3rdOrder_new(a, x, dt,  dx, vel, output1, output2);
 	solve3rdOrder(a, x, dt,  dx, vel, output1);
 
+
+
+
 	/*
+	//	Initialize Simulation Variables
+	double temp[a_len]; //temp variable to hold a^n+1 during computation
+	double xi[a_len]; //interpolation variable 
+	double flux[a_len-1];
+	double fluxR[a_len-2*ghost_num];
+	double fluxL[a_len-2*ghost_num];
+	//print out arrays for verification	
+	if(0)
+	{
+		cout << "Spatial domain: \n";
+		for(int i=0 ; i<a_len ; i++)
+		{
+			cout << "x["<<i-1<<"] = "<<x[i]<<"\n";
+			cout << "a["<<i-1<<",0] = "<<a[i]<<"\n\n";
+		}
+		for(int i=0 ; i<nstep+1 ; i++)
+		{
+			cout << "Time domain: \n";
+			cout << "t = "<<t_start+i*dt<<"\n";
+		}
+	}
+
 	//------------Run simulation------------//
 	// NEED TO CONDENSE FOR READABILITY!!!!!
+	vector <double> l2_error;
 	while( t<t_final )
 	{
 		//	continue iterating through time while step n is less than step total
@@ -1314,7 +1318,7 @@ int main(int argc,char* argv[])
 		for(int i=0 ; i < a_len-1 ; i++)
 		{
 			//flux[i] = membrane_flux(a[i],a[i+1],u);
-			flux[i] = membrane_flux_linear(a[i],a[i+1],u);
+			flux[i] = membrane_flux_linear(a[i],a[i+1],vel);
 			fsum= fsum + flux[i];
 		}
 
@@ -1322,8 +1326,8 @@ int main(int argc,char* argv[])
 
 		for(int i=0 ; i < a_len-2*ghost_num ; i++)
 		{
-			fluxL[i] = membrane_flux_linear(a[i+ghost_num],a[i+ghost_num-1],u);
-			fluxR[i] = membrane_flux_linear(a[i+ghost_num],a[i+ghost_num+1],u);
+			fluxL[i] = membrane_flux_linear(a[i+ghost_num],a[i+ghost_num-1],vel);
+			fluxR[i] = membrane_flux_linear(a[i+ghost_num],a[i+ghost_num+1],vel);
 		}
 
 		// 	print membrane fluxes
@@ -1339,7 +1343,7 @@ int main(int argc,char* argv[])
 		cout << "Update\n\n";
 		for(int i=ghost_num ; i < a_len ; i++)
 		{
-			temp[i] = a[i] - u * ( dt/dx ) * ( flux[i] - flux[i-1] );
+			temp[i] = a[i] - vel * ( dt/dx ) * ( flux[i] - flux[i-1] );
 		}	
 		
 		t += dt;
@@ -1350,7 +1354,7 @@ int main(int argc,char* argv[])
 			a[i] = temp[i];
 		}
 
-		l2_error.push_back(L2error(x, a, t, a_len, u));
+		l2_error.push_back(L2error(x, a, t, a_len, vel));
 		cout << "l2_error = [ ";
 		for(int i=0 ; i < l2_error.size() ; i++)
 			cout << l2_error[i]<<" ";
@@ -1371,7 +1375,7 @@ int main(int argc,char* argv[])
 		cout<< "//----------------------------------------------------//\n";	
 	}
 	// Write L2 error
-	writeError(l2_error, a_len, output, dt);
-	*/
+	writeError(l2_error, a_len, output1, dt);
+	//*/
 }
 
