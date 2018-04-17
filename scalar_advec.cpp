@@ -387,20 +387,28 @@ double advect(double a[], double dt, double dx, double v, double fl[], double fr
 
 
 //---------------------Write Solution--------------------------------------------------//
-void writeSolution(double x[], double t, double mass, int len_a, double t_start)
+void writeSolution(double a[], double x[], double t, double mass, int len_a, double t_start)
 {
 	//Printing to file format
 	//	t
 	//	mass
 	//	x[1] x[2] ... x[len_a]
 	//
+	// x IS a HERE!!!!!!!!!!!!!!!!!!!!
 
 	//print solutions
 	ofstream output1("scalar_advec_sol.out", fstream::app);
 	for (int i=0; i < len_a; i++) 
-		output1 << x[i] << " ";
+		output1 << a[i] << " ";
 	output1 << "\n";
 	output1.close();
+
+	//print actual solution
+	ofstream output4("scalar_advec_real.out", fstream::app);
+	for (int i=0; i < len_a; i++) 
+		output4 <<sin(x[i]-vel*t) << " ";
+	output4 << "\n";
+	output4.close();
 
 	//print times
 	ofstream output2("scalar_advec_t.out", fstream::app);
@@ -484,7 +492,7 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		// write solution to file
 		cout << "Writing solution to file\n\n";
-		writeSolution(a,t,mass,a_len,t_start);
+		writeSolution(a,x,t,mass,a_len,t_start);
 
 		//-----------------------------------forward step----------------------------------//
 		//---------------------------------------------------------------------------------//
@@ -640,7 +648,7 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		// write solution to file
 		cout << "Writing solution to file\n\n";
-		writeSolution(a,t,mass,a_len,t_start);
+		writeSolution(a,x,t,mass,a_len,t_start);
 
 		//------------------------------2nd Order forward step-----------------------------//
 		//---------------------------------------------------------------------------------//
@@ -841,7 +849,7 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 
 		// write solution to file
 		cout << "Writing solution to file\n\n";
-		writeSolution(a,t,mass,a_len,t_start);
+		writeSolution(a,x,t,mass,a_len,t_start);
 
 		//------------------------------3rd Order forward step-----------------------------//
 		//---------------------------------------NEW---------------------------------------//
@@ -1036,7 +1044,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		// write solution to file
 		cout << "Writing solution to file\n\n";
-		writeSolution(a,t,mass,a_len,t_start);
+		writeSolution(a,x,t,mass,a_len,t_start);
 
 		//-----------------------------3rd order forward step------------------------------//
 		//---------------------------------------------------------------------------------//
@@ -1267,9 +1275,8 @@ int main(int argc,char* argv[])
 		cout << " ]\n\n";
 
 	cout << "//--------------------------STARTING SIMULATION--------------------------------//\n";
-	//solve1stOrder(a, x, dt,  dx, vel, output1, output2);
-	solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
-	//solve3rdOrder_new(a, x, dt,  dx, vel, output1, output2);
+	solve1stOrder(a, x, dt,  dx, vel, output1, output2);
+	//solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
 	//solve3rdOrder(a, x, dt,  dx, vel, output1);
 
 
@@ -1328,7 +1335,7 @@ int main(int argc,char* argv[])
 
 		// write solution to file
 		cout << "Writing solution to file\n\n";
-		writeSolution(a,t,mass,a_len,t_start);
+		writeSolution(a,t,x,mass,a_len,t_start);
 
 		fsum= 0;
 		//	compute membrane fluxes	

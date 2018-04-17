@@ -95,6 +95,7 @@ def plotAnim(i):
 		times = []
 		masses = []
 		solutions = []
+		real_solutions = []
 
 
 		infile = open('scalar_advec_sol'+str(i)+'.out','r')
@@ -102,6 +103,13 @@ def plotAnim(i):
 		for line in temp:
 			solutions.append([float(x) for x in line.split()])
 		#print solutions	
+
+		infile = open('scalar_advec_real'+str(i)+'.out','r')
+		temp = infile.readlines()
+		for line in temp:
+			real_solutions.append([float(x) for x in line.split()])
+		#print real_solutions	
+
 
 		infile = open('scalar_advec_mass'+str(i)+'.out','r')
 		temp = infile.readlines()
@@ -122,15 +130,16 @@ def plotAnim(i):
 
 		x = np.linspace(0,2*3.14159,len(solutions[0]))
 		#ax.set_ylim((-1.1,1.1))
-		#line, = ax.plot(x,solutions[0],'r-')
-		line, = ax.plot(solutions[0],'r-')
+		line1, = ax.plot(x,solutions[0],'b-')
+		line2, = ax.plot(x,real_solutions[0],'r-')
 
 		def update(i):
 			label = 't = {0}'.format(times[i])
 			#print(label)
 			# Update the line and the axes (with a new xlabel). Return a tuple of
 			# "artists" that have to be redrawn for this frame.
-			line.set_ydata(solutions[i])
+			line2.set_ydata(real_solutions[i])
+			line1.set_ydata(solutions[i])
 			#line.set_ydata(x)
 			#line2.set_ydata(massesp[i])
 			ax.set_xlabel(label)
@@ -180,7 +189,9 @@ for i, nx in enumerate(nxs):
 	os.system(cmd_5)
 	cmd_6 = "mv l1_error.out l1_error%(i)s.out" % locals()
 	os.system(cmd_6)
-	#plotAnim(i) #old plotting for animation and benchmarking
+	cmd_7 = "mv scalar_advec_real.out scalar_advec_real%(i)s.out" % locals()
+	os.system(cmd_7)
+	plotAnim(i) #old plotting for animation and benchmarking
 
 
 benchmark(fileName_error1, dxs)
