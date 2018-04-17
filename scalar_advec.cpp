@@ -226,8 +226,8 @@ double daj2(double a[], int a_len, int j )
 			//cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
 			daj_m = 0;
 		}
-		//return daj_m;
-		return 0.0;
+		return daj_m;
+		//return 0.0; // this will make the mehtod 1st order
 	}
 	else
 		return daj;
