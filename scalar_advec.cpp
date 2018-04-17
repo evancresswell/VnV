@@ -775,8 +775,8 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 	double l_face[nx];
 	double r_face[nx];
 	double vdaj[a_len-2];
-	double fl[nx+1];
-	double fr[nx];
+	double fl[nx];
+	double fr[nx+1];
 	double temp[a_len];
 
 	// set index variables
@@ -874,78 +874,38 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 		//-------------------------------------------------//
 		
 
-	
-		// ---------------flux calculation ----------------------//
-
 
 		// calculate domain of dependence
 		// ASSUMING CONSTANT DX
 		// v is scalar and dt is static
 		// only going to work for 2nd order: need better integration for 3rd order.......
-
-		double y = v*dt;
-		double al;
-		double ar;
-		double m;
-		double b;
-		double xl;
-		double xr;
-		double dx_trap;
-
-
-		cout << "Calculating Flux\n";
-		//*
+		// ------------------------------flux calculation ----------------------//
+		// ASSUMING CONSTANT DX
 		for(int i=0; i<nx+1; i++)
 		{
-			//ITERATING THROUGH NX+1 WILL CREATE EXTRA FL VALUE BUT THAT DONT MATTER
-			// -----------------------Left Flux---------------------//	
-			// calculate slope and intercep to get line between j-1/2 and j-1/2 - y
-			m = vdaj[i]; // vdaj for a[1]  is vdaj[0] 
-			b = a[i+ghost_num-1]-x[i+ghost_num-1]*m;
-			// set x values for right and left of integration boundary
-			xl = x[i+ghost_num] - (dx/2.) - y ;
-			xr = x[i+ghost_num] - (dx/2.);
-			al = m*xl+b;
-			ar = l_face[i];
-			dx_trap = fabs(xl-xr);
-		
-			fl[i] = trap(dx_trap, al, ar)/y;
-			// ------------------------------------------------------//	
+			fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
+			if(i<nx)	
+				fl[i] = fr[i-1];
+		}	
+		fl[0] = fr[nx];
 
-			/*
-			// -----------------------Right Flux---------------------//	
-			// calculate slope and intercep to get line between j+1/2 and j+1/2 - y
-			m = vdaj[i+1]; // vdaj for a[1] is vdaj[0]
-			b = a[i+ghost_num]-x[i+ghost_num]*m;
-			// set x values for right and left of integration boundary
-			xl = x[i+ghost_num]+ (dx/2.) - y ;
-			xr = x[i+ghost_num] + (dx/2.) ;
-			al = m*xl+b;
-			ar = r_face[i];
-			dx_trap = fabs(xl-xr);
-
-			if(i>0)
-			{
-				fr[i-1]=fl[i];
-			}
-			*/
-			// ------------------------------------------------------//	
-		}
-
-		cout << "Update\n\n";
+		cout << "Calculating Flux\n";
+	
 		fsum = 0;
-
 		cout << "fl = [ ";
 		for(int i=0 ; i < nx ; i++)
+		{
 			cout << fl[i]<<" ";
+			fsum += fl[i];
+		}
 		cout << " ]\n\n";
 
 		cout << "fr = [ ";
 		for(int i=0 ; i < nx ; i++)
 			cout << fr[i]<<" ";
 		cout << " ]\n\n";
-
-
+		// ---------------------------------------------------------------------//
+		cout << "Update\n\n";
 		// save forward step to temporary variable
 		for(int i=inter_start;i<inter_end; i++)
 		{
@@ -1109,14 +1069,30 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		
 		// ------------------------------flux calculation ----------------------//
 		// ASSUMING CONSTANT DX
-		for(int i=0; i<=nx+1; i++)
+		if(1)
 		{
-			if(i<nx)
+			for(int i=0; i<=nx+1; i++)
+			{
+				if(i<nx)
+					fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
+				if(i>0)	
+					fl[i] = fr[i-1];
+			}	
+			fl[0] = fr[nx-1];
+		}
+		if(0)	// FROM
+		{		// solve3rdOrder_NEW
+			
+			for(int i=0; i<nx+1; i++)
+			{
 				fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
-			if(i>0)	
-				fl[i] = fr[i-1];
-		}	
-		fl[0] = fr[nx-1];
+				if(i<nx)	
+					fl[i] = fr[i-1];
+			}	
+			fl[0] = fr[nx];
+		} 
+
+
 
 		cout << "Calculating Flux\n";
 	
@@ -1133,7 +1109,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		for(int i=0 ; i < nx ; i++)
 			cout << fr[i]<<" ";
 		cout << " ]\n\n";
-		// ------------------------------flux calculation ----------------------//
+		// ---------------------------------------------------------------------//
 
 
 
@@ -1295,8 +1271,8 @@ int main(int argc,char* argv[])
 	cout << "//--------------------------STARTING SIMULATION--------------------------------//\n";
 	//solve1stOrder(a, x, dt,  dx, vel, output1, output2);
 	//solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
-	solve3rdOrder_new(a, x, dt,  dx, vel, output1, output2);
-	//solve3rdOrder(a, x, dt,  dx, vel, output1);
+	//solve3rdOrder_new(a, x, dt,  dx, vel, output1, output2);
+	solve3rdOrder(a, x, dt,  dx, vel, output1);
 
 	/*
 	//------------Run simulation------------//
