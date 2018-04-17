@@ -129,7 +129,7 @@ double L2error(double x[], double a[], double t, int len_a, double u)
 		L2_error += pow(a[i] - sin(x[i]+u*t), 2.);
 		cout << pow(a[i] - sin(x[i]+u*t), 2.) << "\n";
 	}
-	L2_error /= nx;
+	L2_error *= dx;
 	L2_error = pow(L2_error,.5);
 	return L2_error;
 }
@@ -208,10 +208,11 @@ double daj2(double a[], int a_len, int j )
 
 	daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
 	
+	cout << "\ndaj before: " << daj << "\n";
 
 	//--- monotonization ---//
 	//cout << "\ndaj before: " << daj << "\n";
-	if(0)
+	if(1)
 	{
 		if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
 		{
@@ -759,11 +760,12 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 
 		//-------------------------------------------------//
 		// Write L2 error
-		writeError(l2_error, a_len, output1, dt);
-		writeError(l1_error, a_len, output2, dt);
-
-	}
+		}
 	//end of while loop
+	writeError(l2_error, a_len, output1, dt);
+	writeError(l1_error, a_len, output2, dt);
+
+
 }
 //----------------------------------------------------------------------
 
@@ -820,8 +822,8 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 		cout << "Writing solution to file\n\n";
 		writeSolution(a,t,mass,a_len,t_start);
 
-		//------------------------------2nd Order forward step-----------------------------//
-		//---------------------------------------------------------------------------------//
+		//------------------------------3rd Order forward step-----------------------------//
+		//---------------------------------------NEW---------------------------------------//
 		//--------------- reconstruction ------------------//
 		cout << "Reconstructing profile\n";
 
@@ -1021,7 +1023,8 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		//------------------ reconstruction ---------------------//
 		cout << "Reconstructing profile\n";
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
-		for(int i=1; i<=a_len-1; i++)
+		//JUST MADE for(int i=1; i<=a_len-1; i++)
+		for(int i=1; i<a_len-1; i++)
 			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
 
 		cout << "vdaj = [ ";
@@ -1069,7 +1072,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		
 		// ------------------------------flux calculation ----------------------//
 		// ASSUMING CONSTANT DX
-		if(1)
+		if(0)
 		{
 			for(int i=0; i<=nx+1; i++)
 			{
@@ -1080,7 +1083,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 			}	
 			fl[0] = fr[nx-1];
 		}
-		if(0)	// FROM
+		if(1)	// FROM
 		{		// solve3rdOrder_NEW
 			
 			for(int i=0; i<nx+1; i++)
