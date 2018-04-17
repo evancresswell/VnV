@@ -208,21 +208,22 @@ double daj2(double a[], int a_len, int j )
 
 	daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
 	
-	cout << "\ndaj before: " << daj << "\n";
+	//cout << "\ndaj before: " << daj << "\n";
 
 	//--- monotonization ---//
-	//cout << "\ndaj before: " << daj << "\n";
+	cout << "\ndaj before: " << daj << "\n";
 	if(1)
 	{
 		if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
 		{
 			daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), 2.*fabs(a[j+1]-a[j])) ;
-			//cout << "daj_m before: " << daj_m << "\n";
+			cout << "daj_m before: " << daj_m << "\n";
 			daj_m *= (daj/fabs(daj));
-			//cout << "daj_m after: " << daj_m << "\n";
+			cout << "daj_m after: " << daj_m << "\n";
 		}	
 		else
 		{
+			cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
 			daj_m = 0;
 		}
 		return daj_m;
@@ -970,10 +971,10 @@ void solve3rdOrder_new(double a[], double x[], double dt, double dx, double v, s
 void solve3rdOrder(double a[], double x[], double dt, double dx, double v, string output)
 {
 	double l_face[nx];
-	double r_face[nx];
+	double r_face[nx+1];
 	double vdaj[a_len-2];
 	double fl[nx];
-	double fr[nx];
+	double fr[nx+1];
 	double temp[a_len];
 
 	// set index variables
@@ -1042,20 +1043,20 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		{
 			if(0)
 			{
-				if(i<inter_end)
-					r_face[i-ghost_num] =  (7./12.)*( a[i] + a[i+1] ) - (1./12.)*( a[i+2]+a[i-1]  );
+				//if(i<inter_end)
+				r_face[i-ghost_num] =  (7./12.)*( a[i] + a[i+1] ) - (1./12.)*( a[i+2]+a[i-1]  );
 				if(i>inter_start)	
 					l_face[i-ghost_num] = r_face[i-ghost_num-1];
 			}
 			else
 			{
-				if(i<inter_end)
-					r_face[i-ghost_num] = a[i] + (1./2.)*( a[i+1] - a[i]  ) + (1./4.)*((2./3.)*vdaj[i-1] + (2./3.)*vdaj[i-1]); // NOTE: daj for a[i+1] is vdaj[i-1]
+				//if(i<inter_end)
+				r_face[i-ghost_num] = a[i] + (1./2.)*( a[i+1] - a[i]  ) + (1./6.)*(vdaj[i-1] + vdaj[i]); // NOTE: daj for a[i] is vdaj[i-1]
 				if(i>inter_start)	
 					l_face[i-ghost_num] = r_face[i-ghost_num-1];
 			}
 		}
-		l_face[0] = r_face[nx-1];
+		l_face[0] = r_face[nx];
 
 		cout << "l_face = [ ";
 		for(int i=0 ; i < nx ; i++)
@@ -1070,7 +1071,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 	
 
 		
-		// ------------------------------flux calculation ----------------------//
+		// ------------------------3rd Order flux calculation ----------------------//
 		// ASSUMING CONSTANT DX
 		if(0)
 		{
@@ -1083,17 +1084,16 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 			}	
 			fl[0] = fr[nx-1];
 		}
-		if(1)	// FROM
-		{		// solve3rdOrder_NEW
-			
-			for(int i=0; i<nx+1; i++)
+		//cout << "HERE\n"	;
+		for(int i=0; i<nx; i++)
+		{
+			fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
+			if(i>0)	
 			{
-				fr[i] = flux3rdOrderR(a, x,  l_face, r_face, v, i);
-				if(i<nx)	
-					fl[i] = fr[i-1];
-			}	
-			fl[0] = fr[nx];
-		} 
+				fl[i] = fr[i-1];
+			}
+		}	
+		fl[0] = fr[nx-1];
 
 
 

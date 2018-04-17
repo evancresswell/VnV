@@ -77,7 +77,7 @@ fileName_error1 = "l2_error"
 fileName_error2 = "l1_error"
 
 c = .5
-nx=16
+nx=20
 orders = [2]
 i=0
 print i
