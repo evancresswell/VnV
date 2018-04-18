@@ -4,42 +4,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-def plotError( fileName,nxs ):
-
+def plotErrorTimeCourse( fileName,i,nx,orders,errorType ):
 		sims_l2 = []
+		l2s = []
 		dts = []
-		numSim = len(nxs)
 
-		#try:
-		for i in range(numSim):
-			name1 = fileName+ str(i) + ".out"
+		# i is the nx index
+		for j,order in enumerate(orders):
+			name1 = fileName+str(order)+'_'+ str(i) + ".out"
 			with open(name1,'r') as f:
 				dt = f.readline().splitlines()
 				#print "dt is " + str(dt)
 				f.close() 
 			print np.loadtxt(name1,skiprows=1).T 
-			l2 = np.loadtxt(name1,skiprows=1).T
+			l2s.append ( np.loadtxt(name1,skiprows=1).T)
 			#sims_l2.append(l2[len(l2)-1])
 			#dts.append(float(dt[0]))
-			print len(l2)
-			dts = np.linspace(0,1,len(l2))
+			print len(l2s[0])
+			time = np.linspace(0,10,len(l2s[0]))
 
 			#debug plotting of error as function of time for each nx
-			plt.plot(dts, l2, label=str(dt), marker='o')
-			plt.legend()
-			plt.show()
+			plt.plot(time, l2s[j], label=errorType+' Order '+str(order))
 
-
-		#print "algo = %s %s" % (algorithm, algorithm)
-		#plt.loglog(dts[1:], sims_l2[1:], label=algorithm, marker='o')
-		
-		#np.save("%s_norms.npy" % algorithm, np.asarray(sims_l2))
-		#np.save("%s_dts.npy" % algorithm, np.asarray(dts))
-		#print "%s norms are: " % algorithm, sims_l2
-		#print "%s dts are: " % algorithm, dts
-		#except:
-		#print "EXCEPTION" 
-		#pass
+		#plt.ylim([0,1])
+		plt.title(str(nx) + ' Points' )
+		plt.xlabel('t')
+		plt.ylabel('Error')
+		plt.legend()
+		plt.show()
 
 def benchmark(filename, dxs, orders):
 
@@ -66,16 +58,17 @@ def benchmark(filename, dxs, orders):
 			#nxs = np.asarray(nxs[::-1])
 			if(order==1):
 				x1 = [1.e-2*a for a in dxs] 
-				plt.loglog(dxs, x1,label='1st order') 
+				plt.loglog(dxs, x1,label='$1^{st}$ Order') 
 			if(order==2):
 				x2 = [1.e-2*a**2 for a in dxs]
-				plt.loglog(dxs, x2,label='2nd order') 
+				plt.loglog(dxs, x2,label='$2^{nd}$ Order') 
 			if(order==3):
 				x3 = [1.e-2*a**3 for a in dxs]
-				plt.loglog(dxs, x3,label='3nd order') 
+				plt.loglog(dxs, x3,label='$3^{rd}$ Order') 
 	
 			plt.loglog(dxs, sims_l2, label='L'+str(error)+' Order '+str(order),  marker='o')
 		plt.legend()
+		plt.savefig('benchmark.png')
 		plt.show()
 
 
@@ -92,11 +85,7 @@ def benchmark(filename, dxs, orders):
 
 
 #---------------------------------------------------------------------------------------------------------------#
-def plotAnim(i, order):
-
-		filename_sol = "scalar_advec_sol.out"
-		filename_t = "scalar_advec_t.out"
-		filename_mass = "scalar_advec_mass.out"
+def plotAnim(i, order, nx):
 		times = []
 		masses = []
 		solutions = []
@@ -135,8 +124,8 @@ def plotAnim(i, order):
 
 		x = np.linspace(0,2*3.14159,len(solutions[0]))
 		#ax.set_ylim((-1.1,1.1))
-		line1, = ax.plot(x,solutions[0],'b-')
-		line2, = ax.plot(x,real_solutions[0],'r-')
+		line1, = ax.plot(x,solutions[0],'b-',label='Numerical Solution')
+		line2, = ax.plot(x,real_solutions[0],linestyle='-.',color='r',label='Solution')
 
 		def update(i):
 			label = 't = {0}'.format(times[i])
@@ -145,9 +134,10 @@ def plotAnim(i, order):
 			# "artists" that have to be redrawn for this frame.
 			line2.set_ydata(real_solutions[i])
 			line1.set_ydata(solutions[i])
-			#line.set_ydata(x)
-			#line2.set_ydata(massesp[i])
 			ax.set_xlabel(label)
+			ax.legend()
+			if(i%500):
+				plt.savefig('solution_plot_t'+str(times[i])+'_nx'+str(nx)+'_o'+str(order)+'.png')
 			return line, ax
 
 		if __name__ == '__main__':
@@ -163,16 +153,11 @@ def plotAnim(i, order):
 #---------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------#
-def plotAnim_square(i,order):
-
-		filename_sol = "scalar_advec_sol.out"
-		filename_t = "scalar_advec_t.out"
-		filename_mass = "scalar_advec_mass.out"
+def plotAnim_square(i,order,nx):
 		times = []
 		masses = []
 		solutions = []
 		real_solutions = []
-
 
 		infile = open('scalar_advec'+str(order)+'_sol'+str(i)+'.out','r')
 		temp = infile.readlines()
@@ -219,6 +204,8 @@ def plotAnim_square(i,order):
 			#line.set_ydata(x)
 			#line2.set_ydata(massesp[i])
 			ax.set_xlabel(label)
+			if(i%100):
+				plt.savefig('solSquare_plot_t'+str(times[i])+'_nx'+str(nx)+'_o'+str(order)+'.png')
 			return line, ax
 
 		if __name__ == '__main__':
@@ -245,36 +232,44 @@ orders = [1,2,3]
 nxs = [10,20,40,80,160,320]
 nxs = [16,32,64,128]
 dxs = [(2.*pi)/a for a in nxs]
-orders = [3]
-order = orders[0]
+orders = [1,2,3]
+#orders = [3]
 #We want to read in and plot 
-fileName_error1 = "l2_error"+str(order)
-fileName_error2 = "l1_error"+str(order)
-
 
 # remove previous simulation files
 os.system("./prep.x")
-
-for i, nx in enumerate(nxs):
-	print i
-	cmd_1 = "./scalar_advec %(nx)s %(c)s %(order)s > o%(i)s" % locals()
-	os.system(cmd_1)
-	cmd_2 = "mv l2_error%(order)s.out l2_error%(order)s_%(i)s.out" % locals()
-	os.system(cmd_2)
-	cmd_3 = "mv scalar_advec%(order)s_mass.out scalar_advec%(order)s_mass%(i)s.out" % locals()
-	os.system(cmd_3)
-	cmd_4 = "mv scalar_advec%(order)s_sol.out scalar_advec%(order)s_sol%(i)s.out" % locals()
-	os.system(cmd_4)
-	cmd_5 = "mv scalar_advec%(order)s_t.out scalar_advec%(order)s_t%(i)s.out" % locals()
-	os.system(cmd_5)
-	cmd_6 = "mv l1_error%(order)s.out l1_error%(order)s_%(i)s.out" % locals()
-	os.system(cmd_6)
-	cmd_7 = "mv scalar_advec%(order)s_real.out scalar_advec%(order)s_real%(i)s.out" % locals()
-	os.system(cmd_7)
-	plotAnim(i,order) #old plotting for animation and benchmarking
-	#plotAnim_square(i,order) #old plotting for animation and benchmarking
-
-
+os.system("ls")
+for order in orders:
+	errorType1 = 'L2'
+	errorType2 = 'L1'
+	fileName_error1 = "l2_error"+str(order)
+	fileName_error2 = "l1_error"+str(order)
+	print order
+	for i, nx in enumerate(nxs):
+		print nx
+		cmd_1 = "./scalar_advec %(nx)s %(c)s %(order)s > o%(i)s" % locals()
+		os.system(cmd_1)
+		cmd_2 = "mv l2_error%(order)s.out l2_error%(order)s_%(i)s.out" % locals()
+		os.system(cmd_2)
+		cmd_3 = "mv scalar_advec%(order)s_mass.out scalar_advec%(order)s_mass%(i)s.out" % locals()
+		os.system(cmd_3)
+		cmd_4 = "mv scalar_advec%(order)s_sol.out scalar_advec%(order)s_sol%(i)s.out" % locals()
+		os.system(cmd_4)
+		cmd_5 = "mv scalar_advec%(order)s_t.out scalar_advec%(order)s_t%(i)s.out" % locals()
+		os.system(cmd_5)
+		cmd_6 = "mv l1_error%(order)s.out l1_error%(order)s_%(i)s.out" % locals()
+		os.system(cmd_6)
+		cmd_7 = "mv scalar_advec%(order)s_real.out scalar_advec%(order)s_real%(i)s.out" % locals()
+		os.system(cmd_7)
+		#plotAnim(i,order,nx) #old plotting for animation and benchmarking
+		#plotAnim_square(i,order,nx) #old plotting for animation and benchmarking
+	
+for nx_index, nx in enumerate(nxs):
+	errorFile1 = "l2_error"
+	errorFile2 = "l1_error"
+	plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
+	plotErrorTimeCourse(errorFile2,nx_index,nxs[nx_index],orders,errorType2)
+	
 benchmark(fileName_error1, dxs,orders)
 
 #---------------READ IN ERRORS---------------------#
@@ -297,9 +292,11 @@ for i,nx in enumerate(nxs):
 	print "l2 Error is "+str(l2[-1])
 	#print len(l2)
 
-"""
+
+
+
 for i,nx in enumerate(nxs):
-	name2 = fileName_error2+ str(i) + ".out"
+	name2 = fileName_error2+'_'+ str(i) + ".out"
 	with open(name2,'r') as f:
 		dt = f.readline().splitlines()
 		#print "dt is " + str(dt)
@@ -309,7 +306,7 @@ for i,nx in enumerate(nxs):
 	sims_l1.append(l1[-1])
 	#print "l1 Error is "+str(l1[-1])
 	#print len(l2)
-"""
+
 
 roc_l2 = []
 roc_l1 = []
@@ -317,14 +314,13 @@ for i,l2_er in enumerate(sims_l2):
 	if(i>0):
 		p_l2 = np.log(sims_l2[i-1]/l2_er)/np.log(2)
 		roc_l2.append(p_l2)	
-		#p_l1 = np.log(sims_l1[i-1]/sims_l1[i])/np.log(2)
-		#roc_l1.append(p_l1)	
+		p_l1 = np.log(sims_l1[i-1]/sims_l1[i])/np.log(2)
+		roc_l1.append(p_l1)	
 
 print "L2 ERROR:"
 print roc_l2
-#print "L1 ERROR:"
-#print roc_l1
+print "L1 ERROR:"
+print roc_l1
 
 
-#plotError(fileName_error1,nxs)
 
