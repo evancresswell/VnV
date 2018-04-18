@@ -1,4 +1,6 @@
 #include <iostream> 
+#include <sstream>
+#include <string>
 #include <algorithm> 
 #include <cstdlib>
 #include <math.h>
@@ -20,6 +22,7 @@ double vel;
 //assumes constant dx
 double dx;
 double dt;
+int order;
 
 // initialize spatiall domain
 double right_boundary;
@@ -156,7 +159,7 @@ double L1error(double x[], double a[], double t, double dx, int len_a, double u)
 void writeError(vector<double> &error, int len_a, string output,double dt)
 {
 	//print solutions
-	string filename = output + ".out";
+	string filename = output + to_string(order) +".out";
 	ofstream output1(filename.c_str(), fstream::app);
 	output1 << dt << "\n";
 	for (int i=0; i < len_a; i++) 
@@ -249,7 +252,7 @@ void reconV(double a[], double x[], int a_len, double dt, double v,	vector<doubl
 {
 	// need to initialize vdaj in main and pass in EMPTY VECTOR
 	for(int i=1; i<=a_len-1; i++)
-		vdaj.push_back( daj1(a, a_len, i) ); //calculate daj for each point i=j
+		vdaj.push_back( daj2(a, a_len, i) ); //calculate daj for each point i=j
 	
 	for(int i=ghost_num; i<=a_len-ghost_num; i++)
 	{
@@ -397,26 +400,30 @@ void writeSolution(double a[], double x[], double t, double mass, int len_a, dou
 	// x IS a HERE!!!!!!!!!!!!!!!!!!!!
 
 	//print solutions
-	ofstream output1("scalar_advec_sol.out", fstream::app);
+	string filename1 = "scalar_advec" + to_string(order)  + "_sol.out";
+	ofstream output1(filename1.c_str(), fstream::app);
 	for (int i=0; i < len_a; i++) 
 		output1 << a[i] << " ";
 	output1 << "\n";
 	output1.close();
 
 	//print actual solution
-	ofstream output4("scalar_advec_real.out", fstream::app);
+	string filename2 = "scalar_advec" + to_string(order) +"_real.out";
+	ofstream output4(filename2.c_str(), fstream::app);
 	for (int i=0; i < len_a; i++) 
 		output4 <<sin(x[i]-vel*t) << " ";
 	output4 << "\n";
 	output4.close();
 
 	//print times
-	ofstream output2("scalar_advec_t.out", fstream::app);
+	string filename3 = "scalar_advec" + to_string(order) +"_t.out";
+	ofstream output2(filename3.c_str(), fstream::app);
 	output2 << t << "\n";
 	output2.close();
 
 	//print mass
-	ofstream output3("scalar_advec_mass.out", fstream::app);
+	string filename4 = "scalar_advec" + to_string(order) +"_mass.out";
+	ofstream output3(filename4.c_str(), fstream::app);
 	output3 << mass << "\n";
 	output3.close();
 }
@@ -1209,6 +1216,7 @@ int main(int argc,char* argv[])
     {
 		nx = atof(argv[1]);
 		c = atof(argv[2]);
+		order = atof(argv[3]);
 		cout << "given nx = " << nx << " and c = " << c << "\n";
     }
 
@@ -1223,6 +1231,7 @@ int main(int argc,char* argv[])
 	dt = c*(dx/fabs(vel));
 	//dt =.01;
 	t_final = 5;
+	t_final = 10;
 	//t_final = 5*dt;
 	t_start = 0.;
 
@@ -1259,8 +1268,14 @@ int main(int argc,char* argv[])
 	
 	//iterate through cells not boundary
 	for(int i=0 ; i<a_len ; i++)
+	{
+		cout << "i/a_len = " << (double)i/a_len << "\n";
+		//if((double)i/a_len<.4 || (double)i/a_len>.6)
+		//	a[i] = 0.;
+		//else
+		//	a[i] = 1.;
 		a[i] = sin(x[i]);
-
+	}
 	//cout << "RJL2 " << a_len << "\n";
 
 	cout << "Initial Condition\n";	
@@ -1275,9 +1290,12 @@ int main(int argc,char* argv[])
 		cout << " ]\n\n";
 
 	cout << "//--------------------------STARTING SIMULATION--------------------------------//\n";
-	solve1stOrder(a, x, dt,  dx, vel, output1, output2);
-	//solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
-	//solve3rdOrder(a, x, dt,  dx, vel, output1);
+	if(order==1)
+		solve1stOrder(a, x, dt,  dx, vel, output1, output2);
+	if(order==2)
+		solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
+	if(order==3)
+		solve3rdOrder(a, x, dt,  dx, vel, output1);
 
 
 

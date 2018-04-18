@@ -41,35 +41,40 @@ def plotError( fileName,nxs ):
 		#print "EXCEPTION" 
 		#pass
 
-def benchmark(filename, dxs):
+def benchmark(filename, dxs, orders):
 
 		sims_l2 = []
 		dts = []
 		numSim = len(nxs)
 
 		#try:
-		for i,nx in enumerate(nxs):
-			name1 = filename+ str(i) + ".out"
-			with open(name1,'r') as f:
-				dt = f.readline().splitlines()
-				print "dt is " + str(dt)
-				f.close() 
-			#print np.loadtxt(name1,skiprows=1).T 
-			l2 = np.loadtxt(name1,skiprows=1).T
-			sims_l2.append(l2[-1])
-			print "Error is "+str(l2[-1])
-			#print len(l2)
-
-		#plot lines for refferences 
-		#nxs = np.asarray(nxs[::-1])
-		x1 = [1.e-2*a for a in dxs] 
-		x2 = [1.e-2*a**2 for a in dxs]
-		x3 = [1.e-2*a**3 for a in dxs]
-		plt.loglog(dxs, x1,label='1st order') 
-		plt.loglog(dxs, x2,label='2nd order') 
-		plt.loglog(dxs, x3,label='3nd order') 
-
-		plt.loglog(dxs, sims_l2,  marker='o')
+		error = 2
+		for order in orders:
+			for i,nx in enumerate(nxs):
+				name1 = filename+"_"+ str(i) + ".out"
+				with open(name1,'r') as f:
+					dt = f.readline().splitlines()
+					print "dt is " + str(dt)
+					f.close() 
+				#print np.loadtxt(name1,skiprows=1).T 
+				l2 = np.loadtxt(name1,skiprows=1).T
+				sims_l2.append(l2[-1])
+				print "Error is "+str(l2[-1])
+				#print len(l2)
+	
+			#plot lines for refferences 
+			#nxs = np.asarray(nxs[::-1])
+			if(order==1):
+				x1 = [1.e-2*a for a in dxs] 
+				plt.loglog(dxs, x1,label='1st order') 
+			if(order==2):
+				x2 = [1.e-2*a**2 for a in dxs]
+				plt.loglog(dxs, x2,label='2nd order') 
+			if(order==3):
+				x3 = [1.e-2*a**3 for a in dxs]
+				plt.loglog(dxs, x3,label='3nd order') 
+	
+			plt.loglog(dxs, sims_l2, label='L'+str(error)+' Order '+str(order),  marker='o')
 		plt.legend()
 		plt.show()
 
@@ -87,7 +92,7 @@ def benchmark(filename, dxs):
 
 
 #---------------------------------------------------------------------------------------------------------------#
-def plotAnim(i):
+def plotAnim(i, order):
 
 		filename_sol = "scalar_advec_sol.out"
 		filename_t = "scalar_advec_t.out"
@@ -98,26 +103,26 @@ def plotAnim(i):
 		real_solutions = []
 
 
-		infile = open('scalar_advec_sol'+str(i)+'.out','r')
+		infile = open('scalar_advec'+str(order)+'_sol'+str(i)+'.out','r')
 		temp = infile.readlines()
 		for line in temp:
 			solutions.append([float(x) for x in line.split()])
 		#print solutions	
 
-		infile = open('scalar_advec_real'+str(i)+'.out','r')
+		infile = open('scalar_advec'+str(order)+'_real'+str(i)+'.out','r')
 		temp = infile.readlines()
 		for line in temp:
 			real_solutions.append([float(x) for x in line.split()])
 		#print real_solutions	
 
 
-		infile = open('scalar_advec_mass'+str(i)+'.out','r')
+		infile = open('scalar_advec'+str(order)+'_mass'+str(i)+'.out','r')
 		temp = infile.readlines()
 		for line in temp:
 			masses.append(float(line))
 		#print masses
 
-		infile = open('scalar_advec_t'+str(i)+'.out','r')
+		infile = open('scalar_advec'+str(order)+'_t'+str(i)+'.out','r')
 		temp = infile.readlines()
 		for line in temp:
 			times.append(float(line))
@@ -158,43 +163,119 @@ def plotAnim(i):
 #---------------------------------------------------------------------------------------------------------------#
 
 #---------------------------------------------------------------------------------------------------------------#
+def plotAnim_square(i,order):
+
+		filename_sol = "scalar_advec_sol.out"
+		filename_t = "scalar_advec_t.out"
+		filename_mass = "scalar_advec_mass.out"
+		times = []
+		masses = []
+		solutions = []
+		real_solutions = []
+
+
+		infile = open('scalar_advec'+str(order)+'_sol'+str(i)+'.out','r')
+		temp = infile.readlines()
+		for line in temp:
+			solutions.append([float(x) for x in line.split()])
+		#print solutions	
+
+		infile = open('scalar_advec'+str(order)+'_real'+str(i)+'.out','r')
+		temp = infile.readlines()
+		for line in temp:
+			real_solutions.append([float(x) for x in line.split()])
+		#print real_solutions	
+
+
+		infile = open('scalar_advec'+str(order)+'_mass'+str(i)+'.out','r')
+		temp = infile.readlines()
+		for line in temp:
+			masses.append(float(line))
+		#print masses
+
+		infile = open('scalar_advec'+str(order)+'_t'+str(i)+'.out','r')
+		temp = infile.readlines()
+		for line in temp:
+			times.append(float(line))
+		#print times
+
+
+		#plot solution
+		fig, ax = plt.subplots()
+		fig.set_tight_layout(True)
+
+		x = np.linspace(0,2*3.14159,len(solutions[0]))
+		ax.set_ylim((-.5,1.15))
+		line1, = ax.plot(x,solutions[0],'b-')
+		#line2, = ax.plot(x,real_solutions[0],'r-')
+
+		def update(i):
+			label = 't = {0}'.format(times[i])
+			#print(label)
+			# Update the line and the axes (with a new xlabel). Return a tuple of
+			# "artists" that have to be redrawn for this frame.
+			#line2.set_ydata(real_solutions[i])
+			line1.set_ydata(solutions[i])
+			#line.set_ydata(x)
+			#line2.set_ydata(massesp[i])
+			ax.set_xlabel(label)
+			return line, ax
+
+		if __name__ == '__main__':
+			# FuncAnimation will call the 'update' function for each frame; here
+			# animating over 10 frames, with an interval of 200ms between frames.
+			anim = FuncAnimation(fig, update, frames=np.arange(0, len(solutions)), interval=200)
+			if len(sys.argv) > 1 and sys.argv[1] == 'save':
+				anim.save('line.gif', dpi=80, writer='imagemagick')
+			else:
+				# plt.show() will just loop the animation forever.
+				plt.show()
+
+#---------------------------------------------------------------------------------------------------------------#
+
+
+#---------------------------------------------------------------------------------------------------------------#
 
 
 pi = math.pi
-#We want to read in and plot 
-fileName_error1 = "l2_error"
-fileName_error2 = "l1_error"
 
 c = .5
 
-order = [1,2,3]
+orders = [1,2,3]
 nxs = [10,20,40,80,160,320]
 nxs = [16,32,64,128]
 dxs = [(2.*pi)/a for a in nxs]
-orders = [2]
+orders = [3]
+order = orders[0]
+#We want to read in and plot 
+fileName_error1 = "l2_error"+str(order)
+fileName_error2 = "l1_error"+str(order)
+
 
 # remove previous simulation files
 os.system("./prep.x")
+
 for i, nx in enumerate(nxs):
 	print i
-	cmd_1 = "./scalar_advec %(nx)s %(c)s > o%(i)s" % locals()
+	cmd_1 = "./scalar_advec %(nx)s %(c)s %(order)s > o%(i)s" % locals()
 	os.system(cmd_1)
-	cmd_2 = "mv l2_error.out l2_error%(i)s.out" % locals()
+	cmd_2 = "mv l2_error%(order)s.out l2_error%(order)s_%(i)s.out" % locals()
 	os.system(cmd_2)
-	cmd_3 = "mv scalar_advec_mass.out scalar_advec_mass%(i)s.out" % locals()
+	cmd_3 = "mv scalar_advec%(order)s_mass.out scalar_advec%(order)s_mass%(i)s.out" % locals()
 	os.system(cmd_3)
-	cmd_4 = "mv scalar_advec_sol.out scalar_advec_sol%(i)s.out" % locals()
+	cmd_4 = "mv scalar_advec%(order)s_sol.out scalar_advec%(order)s_sol%(i)s.out" % locals()
 	os.system(cmd_4)
-	cmd_5 = "mv scalar_advec_t.out scalar_advec_t%(i)s.out" % locals()
+	cmd_5 = "mv scalar_advec%(order)s_t.out scalar_advec%(order)s_t%(i)s.out" % locals()
 	os.system(cmd_5)
-	cmd_6 = "mv l1_error.out l1_error%(i)s.out" % locals()
+	cmd_6 = "mv l1_error%(order)s.out l1_error%(order)s_%(i)s.out" % locals()
 	os.system(cmd_6)
-	cmd_7 = "mv scalar_advec_real.out scalar_advec_real%(i)s.out" % locals()
+	cmd_7 = "mv scalar_advec%(order)s_real.out scalar_advec%(order)s_real%(i)s.out" % locals()
 	os.system(cmd_7)
-	plotAnim(i) #old plotting for animation and benchmarking
+	plotAnim(i,order) #old plotting for animation and benchmarking
+	#plotAnim_square(i,order) #old plotting for animation and benchmarking
 
 
-benchmark(fileName_error1, dxs)
+benchmark(fileName_error1, dxs,orders)
 
 #---------------READ IN ERRORS---------------------#
 sims_l2 = []
@@ -205,7 +286,7 @@ numSim = len(nxs)
 
 #try:
 for i,nx in enumerate(nxs):
-	name1 = fileName_error1+ str(i) + ".out"
+	name1 = fileName_error1+"_"+ str(i) + ".out"
 	with open(name1,'r') as f:
 		dt = f.readline().splitlines()
 		print "dt is " + str(dt)
