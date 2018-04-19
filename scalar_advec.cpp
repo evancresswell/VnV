@@ -223,7 +223,7 @@ double daj2(double a[], int a_len, int j )
 
 	//--- monotonization ---//
 	//cout << "\ndaj before: " << daj << "\n";
-	if(1)
+	if(0)
 	{
 		if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
 		{
@@ -1031,7 +1031,7 @@ int main(int argc,char* argv[])
 	dt = c*(dx/fabs(vel));
 	//dt =.005;
 	t_final = 5;
-	t_final = 10;
+	t_final = 500;
 	//t_final = 5*dt;
 	t_start = 0.;
 

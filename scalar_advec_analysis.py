@@ -64,16 +64,17 @@ def plotErrorTimeCourse_multi( fileNames,errorTypes,i,nx,orders):
 			#debug plotting of error as function of time for each nx
 			if(k==0):
 				for j,order in enumerate(orders):
-					plt.plot(time, l2s[j], label='L2: Order '+str(order),marker='o')
+					plt.plot(time, l2s[j], linewidth=10,label='L2: Order '+str(order),marker='o')
 			if(k==1):
 				for j,order in enumerate(orders):
-					plt.plot(time, l1s[j], label='L1: Order '+str(order),marker='*')
+					plt.plot(time, l1s[j],linewidth=10, label='L1: Order '+str(order),marker='*')
 
 		#plt.ylim([0,1])
 		plt.title('$n_x$=' + str(nx)  )
 		plt.xlabel('t')
 		plt.ylabel('Error')
-		plt.legend()
+		plt.legend(prop={'size': 50})
+
 		plt.show()
 
 
@@ -173,7 +174,7 @@ def benchmark_multiError(filenames,errors, dxs, orders):
 		plt.ylabel('Error')
 		plt.legend()
 		plt.savefig('benchmark.png')
-		#plt.show()
+		plt.show()
 
 
 def benchmark(filename,error, dxs, orders):
@@ -661,7 +662,7 @@ c = .5
 #c = .6
 
 orders = [1,2,3]
-nxs = [10,20,40,80,160,320]
+#nxs = [10,20,40,80,160,320]
 nxs = [16,32,64,128]
 dxs = [(2.*pi)/a for a in nxs]
 orders = [1,2]
@@ -703,12 +704,12 @@ for order in orders:
 # ERROR plotting
 errorFiles = [errorFile1, errorFile2]
 errorTypes = [1,2]
-for i,nx in enumerate(nxs):	
-	plotAnimations(i,orders,nx) # plots solution for given order, nx
+#for i,nx in enumerate(nxs):	
+#	plotAnimations(i,orders,nx) # plots solution for given order, nx
 	#plotAnimations_square(3,orders,128) # plots solution for given order, nx
-#for nx_index, nx in enumerate(nxs):
+for nx_index, nx in enumerate(nxs):
 	#plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
-#	plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
+	plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
 	#plotErrorTimeCourse(errorFile2,nx_index,nxs[nx_index],orders,errorType2)
 	
 #benchmark(errorFile1,errorType1, dxs,orders)
@@ -733,8 +734,6 @@ for i,nx in enumerate(nxs):
 	sims_l2.append(l2[-1])
 	print "l2 Error is "+str(l2[-1])
 	#print len(l2)
-
-
 
 
 for i,nx in enumerate(nxs):
