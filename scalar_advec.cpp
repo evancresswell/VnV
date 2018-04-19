@@ -1072,10 +1072,12 @@ int main(int argc,char* argv[])
 		a[i] = sin(x[i]);
 		cout << "i/a_len = " << (double)i/a_len << "\n";
 		// square wave
+		/*
 		if((double)i/a_len<.4 || (double)i/a_len>.6)
 			a[i] = 0.;
 		else
 			a[i] = 1.;
+		*/
 	}
 	//cout << "RJL2 " << a_len << "\n";
 
