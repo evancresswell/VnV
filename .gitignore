@@ -1,4 +1,5 @@
 *.out
+*.png
 *.swp
 o*
 scalar_advec

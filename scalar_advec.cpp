@@ -665,7 +665,7 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
 		// vdaj OFFSET BY 1 FROM a
 		for(int i=1; i<=a_len-1; i++)
-			vdaj[i-1] = daj1(a, a_len, i) ; //calculate daj for each point i=j
+			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
 	
 		//for(int i=inter_start; i<inter_end; i++)
 		for(int i=inter_start; i<=inter_end; i++) // PHIL NOTES 
@@ -1029,7 +1029,7 @@ int main(int argc,char* argv[])
 
 	// define dt to satisfy satisfy CFL condition
 	dt = c*(dx/fabs(vel));
-	//dt =.01;
+	//dt =.005;
 	t_final = 5;
 	t_final = 10;
 	//t_final = 5*dt;
@@ -1069,12 +1069,13 @@ int main(int argc,char* argv[])
 	//iterate through cells not boundary
 	for(int i=0 ; i<a_len ; i++)
 	{
-		cout << "i/a_len = " << (double)i/a_len << "\n";
-		//if((double)i/a_len<.4 || (double)i/a_len>.6)
-		//	a[i] = 0.;
-		//else
-		//	a[i] = 1.;
 		a[i] = sin(x[i]);
+		cout << "i/a_len = " << (double)i/a_len << "\n";
+		// square wave
+		if((double)i/a_len<.4 || (double)i/a_len>.6)
+			a[i] = 0.;
+		else
+			a[i] = 1.;
 	}
 	//cout << "RJL2 " << a_len << "\n";
 
