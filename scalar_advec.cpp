@@ -1031,7 +1031,8 @@ int main(int argc,char* argv[])
 	dt = c*(dx/fabs(vel));
 	//dt =.005;
 	t_final = 5;
-	t_final = 500;
+	t_final = 10*M_PI;
+	//t_final = 500;
 	//t_final = 5*dt;
 	t_start = 0.;
 
@@ -1072,12 +1073,12 @@ int main(int argc,char* argv[])
 		a[i] = sin(x[i]);
 		cout << "i/a_len = " << (double)i/a_len << "\n";
 		// square wave
-		/*
+		//*
 		if((double)i/a_len<.4 || (double)i/a_len>.6)
-			a[i] = 0.;
-		else
 			a[i] = 1.;
-		*/
+		else
+			a[i] = 2.;
+	//	*/
 	}
 	//cout << "RJL2 " << a_len << "\n";
 

@@ -77,6 +77,49 @@ def plotErrorTimeCourse_multi( fileNames,errorTypes,i,nx,orders):
 
 		plt.show()
 
+def transitionNumber(sol):
+		count = 0
+		for i,val in enumerate(sol):
+			if(val>1.05 and val<1.95):
+				count = count +1
+		return count
+
+def countTransitionNodes(orders,nx_index):
+
+		times = []
+		trans_order = []
+		x = []
+		for order in orders:
+			solutions = []
+			infile = open('scalar_advec'+str(order)+'_sol'+str(nx_index)+'.out','r')
+			temp = infile.readlines()
+			for line in temp:
+				solutions.append([float(x) for x in line.split()])
+					
+			transitionNodes = []	
+			for solution in solutions:
+				transitionNodes.append(transitionNumber(solution))
+			trans_order.append(transitionNodes)
+				
+		infile = open('scalar_advec'+str(order)+'_t'+str(nx_index)+'.out','r')
+		temp = infile.readlines()
+		for line in temp:
+			times.append(float(line))
+		#print times
+		
+	
+		for i,order in enumerate(orders):
+			print order
+			c =8
+			x=[c*t**(1./(order+1)) for t in times]
+			plt.plot(times,trans_order[i],label='Order '+str(order))	
+			plt.plot(times,x,label='Order '+str(order)+' Reference')	
+		plt.legend()
+		plt.show()
+
+		print transitionNodes
+			
+
 
 def benchmark_multiError(filenames,errors, dxs, orders):
 			
@@ -665,7 +708,7 @@ orders = [1,2,3]
 #nxs = [10,20,40,80,160,320]
 nxs = [16,32,64,128]
 dxs = [(2.*pi)/a for a in nxs]
-orders = [1,2]
+orders = [1,2,3]
 #orders = [3]
 #We want to read in and plot 
 
@@ -704,17 +747,18 @@ for order in orders:
 # ERROR plotting
 errorFiles = [errorFile1, errorFile2]
 errorTypes = [1,2]
-#for i,nx in enumerate(nxs):	
-#	plotAnimations(i,orders,nx) # plots solution for given order, nx
-	#plotAnimations_square(3,orders,128) # plots solution for given order, nx
-for nx_index, nx in enumerate(nxs):
+for i,nx in enumerate(nxs):	
+	#plotAnimations(i,orders,nx) # plots solution for given order, nx
+	plotAnimations_square(3,orders,128) # plots solution for given order, nx
+#for nx_index, nx in enumerate(nxs):
 	#plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
-	plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
+	#plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
 	#plotErrorTimeCourse(errorFile2,nx_index,nxs[nx_index],orders,errorType2)
 	
 #benchmark(errorFile1,errorType1, dxs,orders)
 #benchmark_multiError(errorFiles,errorTypes, dxs,orders)
-
+nx_index = 1
+countTransitionNodes(orders,nx_index)
 #---------------READ IN ERRORS---------------------#
 sims_l2 = []
 sims_l1 = []
