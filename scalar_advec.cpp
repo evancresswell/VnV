@@ -89,7 +89,7 @@ double trap(double dx, double ly, double lr)
 {
 	// use trapezoid rule to integrate between lb and rb
 	double val;
-	val = ( dx*( ly+lr ) )/2. ;
+	val = dx*( ( ly+lr )/2. ) ;
 	
 	return val;
 }
@@ -217,25 +217,62 @@ double daj2(double a[], int a_len, int j )
 	double daj_m;
 	double daj;
 
-	daj = (1./3.) * ( (3./2.) * (a[j+1] - a[j]) + (3./2.) * (a[j] - a[j-1]) );
+	daj =  ( (1./2.) * (a[j+1] - a[j-1]) );
+	
+	//cout << "\ndaj before: " << daj << "\n";
+
+	//--- monotonization ---//
+	cout << "\ndaj before: " << daj << "\n";
+	if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) <= 0.)
+	{
+		cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
+		daj_m = 0;
+	}	
+	else
+	{
+		daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), 2.*fabs(a[j+1]-a[j])) ;
+		cout << "daj_m before: " << daj_m << "\n";
+		daj_m *= (daj/fabs(daj));
+		cout << "daj_m after: " << daj_m << "\n";
+	}
+	return daj_m;
+	//return 0.0; // this will make the mehtod 1st order
+	//----------------------//
+
+}
+
+//----------------------------------------------------------------------
+
+//-------------------------Monotonize 2-----------------------------------
+//----------------------------------------------------------------------
+// second order reconstrunction
+//calculates single slope for given node
+double daj3(double a[], int a_len, int j )
+{
+	// calculate the average slope in the jth zone
+	double daj_m;
+	double daj;
+
+	daj =  ( (1./2.) * (a[j+1] - a[j-1]) );
 	
 	//cout << "\ndaj before: " << daj << "\n";
 
 	//--- monotonization ---//
 	//cout << "\ndaj before: " << daj << "\n";
-	if(0)
+	if(1)
 	{
-		if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) > 0.)
+		if( ((a[j+1] - a[j]) * (a[j] - a[j-1])) <= 0.)
+		{
+			//cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
+			daj_m = 0;
+		}	
+		else
 		{
 			daj_m = smallest( fabs(daj) , 2.*fabs(a[j]-a[j-1]), 2.*fabs(a[j+1]-a[j])) ;
 			//cout << "daj_m before: " << daj_m << "\n";
 			daj_m *= (daj/fabs(daj));
 			//cout << "daj_m after: " << daj_m << "\n";
-		}	
-		else
-		{
-			//cout << "maxima: val: " << ((a[j+1] - a[j]) * (a[j] - a[j-1]))  << " not > 0\n";
-			daj_m = 0;
+
 		}
 		return daj_m;
 		//return 0.0; // this will make the mehtod 1st order
@@ -247,6 +284,9 @@ double daj2(double a[], int a_len, int j )
 }
 
 //----------------------------------------------------------------------
+
+
+
 //---------------------Reconstruction--------------------------------------------------//
 void reconV(double a[], double x[], int a_len, double dt, double v,	vector<double> & l_face, vector<double> & r_face, vector<double> & vdaj)
 {
@@ -387,6 +427,22 @@ double advect(double a[], double dt, double dx, double v, double fl[], double fr
 	return temp;
 }
 //----------------------------------------------------------------------
+
+//---------------------advect one step--------------------------------------------------//
+double advect_new(double a[], double dt, double dx, double v, double flux[],int i)
+{
+	// Given that the fluxes have been calculated for the correct membrane (right or left) we simply upwind... 
+	// Therefore v does not need to be considered.
+	double temp;
+	int ghost_num = 2;
+	temp=  a[i] + v * (dt/dx) * (flux[i-ghost_num] - flux[i-ghost_num+1]) ; //flux at the left and right membrane of the cell
+	cout << "RJL " <<a[i]<< " " << flux[i-ghost_num] << " " << flux[i-ghost_num+1] << "\n"; 
+	cout << "Temp: " << temp << "\n";
+	cout <<"v*dt/dx: " << v*dt/dx << "\n";
+	return temp;
+}
+//----------------------------------------------------------------------
+
 
 
 //---------------------Write Solution--------------------------------------------------//
@@ -609,11 +665,11 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 // with monotonizing and averaging
 void solve2ndOrder_phil(double a[], double x[], double dt, double dx, double v, string output1, string output2)
 {
-	double l_face[nx];
-	double r_face[nx];
+	double l_face[a_len-2];
+	double r_face[a_len-2];
 	double vdaj[a_len-2];
-	double fl[nx+1];
-	double fr[nx];
+	double fl[a_len-1];
+	double fr[a_len-2];
 	double temp[a_len];
 
 	// set index variables
@@ -666,12 +722,6 @@ void solve2ndOrder_phil(double a[], double x[], double dt, double dx, double v, 
 		// vdaj OFFSET BY 1 FROM a
 		for(int i=1; i<=a_len-1; i++)
 			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
-	
-		for(int i=inter_start; i<=inter_end; i++)
-		{
-			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.;
-			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;		
-		}
 		//-------------------------------------------------//
 			
 		// ---------------flux calculation ----------------------//
@@ -691,7 +741,7 @@ void solve2ndOrder_phil(double a[], double x[], double dt, double dx, double v, 
 		double xr;
 		double dx_trap;
 
-
+		double flux[nx+1];
 		// cout << "Calculating Flux\n";
 		//*
 		for(int i=0; i<nx+1; i++)
@@ -699,44 +749,23 @@ void solve2ndOrder_phil(double a[], double x[], double dt, double dx, double v, 
 			//ITERATING THROUGH NX+1 WILL CREATE EXTRA FL VALUE BUT THAT DONT MATTER
 			// -----------------------Left Flux---------------------//	
 			// calculate slope and intercep to get line between j-1/2 and j-1/2 - y
-			m = vdaj[i]; // vdaj for a[1]  is vdaj[0] 
-			b = a[i+ghost_num-1]-x[i+ghost_num-1]*m;
 			// set x values for right and left of integration boundary
-			xl = x[i+ghost_num] - (dx/2.) - y ;
-			xr = x[i+ghost_num] - (dx/2.);
-			al = m*xl+b;
-			ar = l_face[i];
-			dx_trap = fabs(xl-xr);
-		
-			fl[i] = trap(dx_trap, al, ar)/y;
-			// ------------------------------------------------------//	
-
-			// -----------------------Right Flux---------------------//	
-			// calculate slope and intercep to get line between j+1/2 and j+1/2 - y
-			m = vdaj[i+1]; // vdaj for a[1] is vdaj[0]
-			b = a[i+ghost_num]-x[i+ghost_num]*m;
-			// set x values for right and left of integration boundary
-			xl = x[i+ghost_num]+ (dx/2.) - y ;
-			xr = x[i+ghost_num] + (dx/2.) ;
-			al = m*xl+b;
-			ar = r_face[i];
-			dx_trap = fabs(xl-xr);
-
-			if(i>0)
-			{
-				fr[i-1]=fl[i];
-			}
-
+			xl = x[i+1] + (dx/2.) - y ;
+			xr = x[i+1] + (dx/2.);
+			al = a[i+1] + (vdaj[i]/2.)*((dx/2. - y)/(dx/2.));
+			ar = r_face[i]; //a[i+1] + (vdaj[i]/2.)
+			//flux[i]	=  trap(y, al, ar)/y;
+			flux[i]	= a[i+1] + .5*vdaj[i]*(1-y/dx);
 			// ------------------------------------------------------//	
 		}
 
 		// cout << "Update\n\n";
 		fsum = 0;
 
-		// cout << "fl = [ ";
-		// for(int i=0 ; i < nx ; i++)
-		// 	cout << fl[i]<<" ";
-		// cout << " ]\n\n";
+		 cout << "flux = [ ";
+		 for(int i=0 ; i < nx+1 ; i++)
+		 	cout << flux[i]<<" ";
+		 cout << " ]\n\n";
 
 		// cout << "fr = [ ";
 		// for(int i=0 ; i < nx ; i++)
@@ -747,9 +776,8 @@ void solve2ndOrder_phil(double a[], double x[], double dt, double dx, double v, 
 		// save forward step to temporary variable
 		for(int i=inter_start;i<inter_end; i++)
 		{
-			temp[i] = advect(a, dt,  dx,  v, fl, fr, i);
-			fsum =+ (fl[i-ghost_num] - fr[i-ghost_num]);
-
+			temp[i] = advect_new(a, dt,  dx,  v, flux, i);
+			fsum =+ (flux[i-ghost_num] - flux[i-ghost_num+1]);
 		}
 
 
@@ -1060,7 +1088,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 		cout << "Reconstructing profile\n";
 		// need to initialize vdaj in main and pass in EMPTY VECTOR
 		for(int i=1; i<a_len-1; i++)
-			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
+			vdaj[i-1] = daj3(a, a_len, i) ; //calculate daj for each point i=j
 
 		cout << "vdaj = [ ";
 		for(int i=0 ; i < a_len-ghost_num ; i++)
@@ -1196,6 +1224,7 @@ void solve3rdOrder(double a[], double x[], double dt, double dx, double v, strin
 
 
 
+
 int main(int argc,char* argv[])
 {
 	// initialize simulations parameters
@@ -1268,7 +1297,7 @@ int main(int argc,char* argv[])
 		a[i] = sin(x[i]);
 		cout << "i/a_len = " << (double)i/a_len << "\n";
 		// square wave
-		//*
+		/*
 		if((double)i/a_len<.4 || (double)i/a_len>.6)
 			a[i] = 1.;
 		else

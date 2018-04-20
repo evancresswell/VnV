@@ -329,7 +329,7 @@ def plotAnimations_square(nx_index, orders, nx):
 
 		x = np.linspace(0,2*3.14159,len(solutions[0]))
 		line1, = ax.plot(x,order_sols[0][0],'b-',label='Order 1')
-		line2, = ax.plot(x,order_sols[1][0],'c-',label='Order 2')
+		line2, = ax.plot(x,order_sols[1][0],'r-',label='Order 2')
 		line3, = ax.plot(x,order_sols[2][0],'g-',label='Order 3')
 		#line4, = ax.plot(x,real_solutions[0],linestyle='-.',color='r',label='Solution')
 
@@ -707,7 +707,7 @@ c = .5
 orders = [1,2,3]
 #nxs = [10,20,40,80,160,320]
 nxs = [16,32,64]
-nxs = [64]
+#nxs = [64]
 dxs = [(2.*pi)/a for a in nxs]
 orders = [1,2,3]
 #orders = [3]
@@ -727,7 +727,7 @@ for order in orders:
 	print order
 	for i, nx in enumerate(nxs):
 		print nx
-		cmd_1 = "./scalar_advec %(nx)s %(c)s %(order)s > o%(i)s" % locals()
+		cmd_1 = "./scalar_advec %(nx)s %(c)s %(order)s > o%(order)s" % locals()
 		os.system(cmd_1)
 		cmd_2 = "mv l2_error%(order)s.out l2_error%(order)s_%(i)s.out" % locals()
 		os.system(cmd_2)
@@ -749,17 +749,17 @@ for order in orders:
 errorFiles = [errorFile1, errorFile2]
 errorTypes = [1,2]
 for i,nx in enumerate(nxs):	
-	#plotAnimations(i,orders,nx) # plots solution for given order, nx
-	plotAnimations_square(0,orders,64) # plots solution for given order, nx
-#for nx_index, nx in enumerate(nxs):
+	plotAnimations(i,orders,nx) # plots solution for given order, nx
+	#plotAnimations_square(0,orders,64) # plots solution for given order, nx
+for nx_index, nx in enumerate(nxs):
 	#plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
-	#plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
+	plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
 	#plotErrorTimeCourse(errorFile2,nx_index,nxs[nx_index],orders,errorType2)
 	
 #benchmark(errorFile1,errorType1, dxs,orders)
-#benchmark_multiError(errorFiles,errorTypes, dxs,orders)
+benchmark_multiError(errorFiles,errorTypes, dxs,orders)
 nx_index = 1
-countTransitionNodes(orders,nx_index)
+#countTransitionNodes(orders,nx_index)
 #---------------READ IN ERRORS---------------------#
 sims_l2 = []
 sims_l1 = []
