@@ -333,7 +333,6 @@ def plotAnimations_square(nx_index, orders, nx):
 		line3, = ax.plot(x,order_sols[2][0],'g-',label='Order 3')
 		#line4, = ax.plot(x,real_solutions[0],linestyle='-.',color='r',label='Solution')
 
-		ax.set_ylim((-.5,1.5))
 		#lines.append( ax.plot(x,solutions[0],'b-',label='Order '+str(order)))
 
 		for j,order in enumerate(orders):
@@ -350,6 +349,7 @@ def plotAnimations_square(nx_index, orders, nx):
 			line3.set_ydata(order_sols[2][i])		
 			ax.set_xlabel(label)
 			ax.legend()
+			ax.set_ylim((.95,2.5))
 			if(i%1000):
 				plt.savefig('solution_plot_t'+str(times[i])+'_nx'+str(nx)+'_o'+str(order)+'.png')
 			return line, ax
@@ -706,7 +706,8 @@ c = .5
 
 orders = [1,2,3]
 #nxs = [10,20,40,80,160,320]
-nxs = [16,32,64,128]
+nxs = [16,32,64]
+nxs = [64]
 dxs = [(2.*pi)/a for a in nxs]
 orders = [1,2,3]
 #orders = [3]
@@ -749,7 +750,7 @@ errorFiles = [errorFile1, errorFile2]
 errorTypes = [1,2]
 for i,nx in enumerate(nxs):	
 	#plotAnimations(i,orders,nx) # plots solution for given order, nx
-	plotAnimations_square(3,orders,128) # plots solution for given order, nx
+	plotAnimations_square(0,orders,64) # plots solution for given order, nx
 #for nx_index, nx in enumerate(nxs):
 	#plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
 	#plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)

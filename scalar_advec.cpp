@@ -605,6 +605,201 @@ void solve1stOrder(double a[], double x[], double dt, double dx, double v, strin
 }
 //----------------------------------------------------------------------
 
+//---------------------2nd order Solver PHIL--------------------------------------------------//
+// with monotonizing and averaging
+void solve2ndOrder_phil(double a[], double x[], double dt, double dx, double v, string output1, string output2)
+{
+	double l_face[nx];
+	double r_face[nx];
+	double vdaj[a_len-2];
+	double fl[nx+1];
+	double fr[nx];
+	double temp[a_len];
+
+	// set index variables
+	inter_start = ghost_num;
+	inter_end = a_len-ghost_num;
+	double mass;
+	double fsum;
+	double sum;
+	int n=0;
+	vector<double> l2_error;
+	vector<double> l1_error;
+	t = 0;
+	ghost_num = 2; //SHOULD BE 2
+	
+	while (t<t_final)
+	{
+		//	continue iterating through time while step n is less than step total
+	
+		cout<< "//------------t = "<< t <<"------------//\n";	
+		// cout << "a = [ ";
+		// for(int i=0 ; i < a_len ; i++)
+		// 	cout << a[i]<<" ";
+		// cout << " ]\n\n";
+		
+		// 	set ghost cells
+		// cout << "Ghost update:\n";
+		for(int i=0; i<ghost_num;i++)
+		{
+				// cout << "Setting a[" << i << "] to a["<<a_len-1-ghost_num-i <<"]\n";
+				// cout << "Setting a[" << a_len-1-i<< "] to a["<<ghost_num+i <<"]\n\n";
+				a[ghost_num-1-i] = a[a_len-1-ghost_num-i];
+				a[a_len-ghost_num+i] = a[ghost_num+i];
+		}
+		// cout << "a = [ ";
+		// for(int i=0 ; i < a_len ; i++)
+		// 	cout << a[i]<<" ";
+		// cout << " ]\n\n";
+
+
+		// write solution to file
+		cout << "Writing solution to file\n\n";
+		writeSolution(a,x,t,mass,a_len,t_start);
+
+		//------------------------------2nd Order forward step-----------------------------//
+		//------------------------------------PHIL-----------------------------------------//
+		//--------------- reconstruction ------------------//
+		cout << "Reconstructing profile\n";
+
+		// need to initialize vdaj in main and pass in EMPTY VECTOR
+		// vdaj OFFSET BY 1 FROM a
+		for(int i=1; i<=a_len-1; i++)
+			vdaj[i-1] = daj2(a, a_len, i) ; //calculate daj for each point i=j
+	
+		for(int i=inter_start; i<=inter_end; i++)
+		{
+			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.;
+			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;		
+		}
+		//-------------------------------------------------//
+			
+		// ---------------flux calculation ----------------------//
+
+
+		// calculate domain of dependence
+		// ASSUMING CONSTANT DX
+		// v is scalar and dt is static
+		// only going to work for 2nd order: need better integration for 3rd order.......
+
+		double y = v*dt;
+		double al;
+		double ar;
+		double m;
+		double b;
+		double xl;
+		double xr;
+		double dx_trap;
+
+
+		// cout << "Calculating Flux\n";
+		//*
+		for(int i=0; i<nx+1; i++)
+		{
+			//ITERATING THROUGH NX+1 WILL CREATE EXTRA FL VALUE BUT THAT DONT MATTER
+			// -----------------------Left Flux---------------------//	
+			// calculate slope and intercep to get line between j-1/2 and j-1/2 - y
+			m = vdaj[i]; // vdaj for a[1]  is vdaj[0] 
+			b = a[i+ghost_num-1]-x[i+ghost_num-1]*m;
+			// set x values for right and left of integration boundary
+			xl = x[i+ghost_num] - (dx/2.) - y ;
+			xr = x[i+ghost_num] - (dx/2.);
+			al = m*xl+b;
+			ar = l_face[i];
+			dx_trap = fabs(xl-xr);
+		
+			fl[i] = trap(dx_trap, al, ar)/y;
+			// ------------------------------------------------------//	
+
+			// -----------------------Right Flux---------------------//	
+			// calculate slope and intercep to get line between j+1/2 and j+1/2 - y
+			m = vdaj[i+1]; // vdaj for a[1] is vdaj[0]
+			b = a[i+ghost_num]-x[i+ghost_num]*m;
+			// set x values for right and left of integration boundary
+			xl = x[i+ghost_num]+ (dx/2.) - y ;
+			xr = x[i+ghost_num] + (dx/2.) ;
+			al = m*xl+b;
+			ar = r_face[i];
+			dx_trap = fabs(xl-xr);
+
+			if(i>0)
+			{
+				fr[i-1]=fl[i];
+			}
+
+			// ------------------------------------------------------//	
+		}
+
+		// cout << "Update\n\n";
+		fsum = 0;
+
+		// cout << "fl = [ ";
+		// for(int i=0 ; i < nx ; i++)
+		// 	cout << fl[i]<<" ";
+		// cout << " ]\n\n";
+
+		// cout << "fr = [ ";
+		// for(int i=0 ; i < nx ; i++)
+		// 	cout << fr[i]<<" ";
+		// cout << " ]\n\n";
+
+
+		// save forward step to temporary variable
+		for(int i=inter_start;i<inter_end; i++)
+		{
+			temp[i] = advect(a, dt,  dx,  v, fl, fr, i);
+			fsum =+ (fl[i-ghost_num] - fr[i-ghost_num]);
+
+		}
+
+
+		// NEED TO CONDENSE FOR READABILITY!!!!!
+		t += dt;
+		cout << "After update we have\n";
+		cout << "fsum = "<<fsum<<"\n";
+		for(int i=inter_start;i<inter_end; i++)
+		{
+			a[i] = temp[i];
+		}
+
+		l2_error.push_back(L2error(x, a, t, dx, a_len, v));
+		cout << "l2_error = [ ";
+		for(int i=0 ; i < l2_error.size() ; i++)
+			cout << l2_error[i]<<" ";
+		cout << " ]\n";
+		
+		l1_error.push_back(L1error(x, a, t, dx, a_len, v));
+		cout << "l1_error = [ ";
+		for(int i=0 ; i < l2_error.size() ; i++)
+			cout << l1_error[i]<<" ";
+		cout << " ]\n";
+		
+
+		// debug printout	
+		cout << "a = [ ";
+		for(int i=0 ; i < a_len ; i++)
+			cout << a[i]<<" ";
+		cout << " ]\n";
+		
+		mass = totalMass(a, a_len);
+		cout << "Total mass is: " << mass << "\n";
+		
+		n++;
+		cout << "\n";
+		cout<< "//----------------------------------------------------//\n";	
+
+		//-------------------------------------------------//
+		// Write L2 error
+		}
+	//end of while loop
+	writeError(l2_error, a_len, output1, dt);
+	writeError(l1_error, a_len, output2, dt);
+
+
+}
+//----------------------------------------------------------------------
+
+
 //---------------------2nd order solveSolver--------------------------------------------------//
 // with monotonizing and averaging
 void solve2ndOrder(double a[], double x[], double dt, double dx, double v, string output1, string output2)
@@ -671,10 +866,10 @@ void solve2ndOrder(double a[], double x[], double dt, double dx, double v, strin
 		for(int i=inter_start; i<=inter_end; i++) // PHIL NOTES 
 		{
 			// vdaj OFFSET BY 1 FROM a 
-			//l_face[i-ghost_num] =  a[i]-vdaj[i-1]/2.;
-			//r_face[i-ghost_num] =  a[i]+vdaj[i-1]/2.;		
-			l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.; // PHIL NOTES
-			r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;
+			l_face[i-ghost_num] =  a[i]-vdaj[i-1]/2.;
+			r_face[i-ghost_num] =  a[i]+vdaj[i-1]/2.;		
+			//l_face[i-ghost_num] =  a[i]-vdaj[i-ghost_num]/2.; // PHIL NOTES
+			//r_face[i-ghost_num] =  a[i]+vdaj[i-ghost_num]/2.;
 		}
 		//-------------------------------------------------//
 			
@@ -1097,7 +1292,8 @@ int main(int argc,char* argv[])
 	if(order==1)
 		solve1stOrder(a, x, dt,  dx, vel, output1, output2);
 	if(order==2)
-		solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
+		//solve2ndOrder(a, x, dt,  dx, vel, output1, output2);
+		solve2ndOrder_phil(a, x, dt,  dx, vel, output1, output2);
 	if(order==3)
 		solve3rdOrder(a, x, dt,  dx, vel, output1,output2);
 
