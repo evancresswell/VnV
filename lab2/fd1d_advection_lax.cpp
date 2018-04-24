@@ -11,6 +11,9 @@ using namespace std;
 int main ( );
 int i4_modp ( int i, int j );
 int i4_wrap ( int ival, int ilo, int ihi );
+double L2_error ( int nx, double x[], double u[] );
+double L1_error ( int nx, double x[], double u[] );
+double Linf_error ( int nx, double x[], double u[] );
 double *initial_condition2 ( int nx, double x[] );
 double *initial_condition1 ( int nx, double x[] );
 double *r8vec_linspace_new ( int n, double a, double b );
@@ -550,4 +553,35 @@ void timestamp ( )
 
   return;
 # undef TIME_SIZE
+}
+
+//****************************************************************************80
+
+double L2_error ( int nx, double x[], double u[], double c, double t );
+
+//****************************************************************************80
+{
+	double L2_error=0;
+	double analytical = 0;
+	double difference = 0;
+
+	for ( i = 0; i < nx; i++ )
+	{
+		// the window with the sine curve shifts, this is implemented in the if statement.
+		if  ( 0.25 + c*t %  <= x[i] && x[i] <= 0.75 + c*t )
+		{
+      		difference = u[i] - ( pow( sin( 2*M_PI* (x[i]-.25 + c*t) ) , 2 ) + 1 ) ;
+			L2_error += pow(difference * dx, 2.);
+    	}
+    	else
+    	{
+      		difference = u[i] - 1.0;
+    	}
+  	}
+	L2_error = sqrt(L2_error);
+
+
+
+
+
 }
