@@ -5,13 +5,14 @@
 # include <cmath>
 # include <ctime>
 # include <cstring>
+# include <vector>
 
 using namespace std;
 
-int main ( );
+int main ( int argc, char** argv );
 int i4_modp ( int i, int j );
 int i4_wrap ( int ival, int ilo, int ihi );
-double L2_error ( int nx, double x[], double u[] );
+double L2_error ( int nx, double x[], double u[], double c, double t );
 double L1_error ( int nx, double x[], double u[] );
 double Linf_error ( int nx, double x[], double u[] );
 double *initial_condition2 ( int nx, double x[] );
@@ -21,7 +22,7 @@ void timestamp ( );
 
 //****************************************************************************80
 
-int main ( )
+int main ( int argc, char** argv )
 
 //****************************************************************************80
 //
@@ -70,6 +71,8 @@ int main ( )
   double *u;
   double *unew;
   double *x;
+  double cour;
+  vector <double> l2_error;
 
   timestamp ( );
   cout << "\n";
@@ -91,14 +94,22 @@ int main ( )
   cout << "    du/dt = (u(t+dt,x)-0.5*u(t,x-dx)-0.5*u(t,x+dx))/dt\n";
   cout << "    du/dx = (u(t,x+dx)-u(t,x-dx))/2/dx\n";
 
+  // read nx through command line
   nx = 101;
+  nx = atof(argv[1]);
+
   dx = 1.0 / ( double ) ( nx - 1 );
   a = 0.0;
   b = 1.0;
   x = r8vec_linspace_new ( nx, a, b );
-  nt = 1000;
-  dt = 1.0 / ( double ) ( nt );
   c = 1.0;
+  // old dt definition
+  //nt = 1000;
+  //dt = 1.0 / ( double ) ( nt );
+  // new dt definition
+  cour = atof(argv[2]);
+  dt = cour*dx/c;
+  nt = ceil(1./dt);
 
   u = initial_condition2 ( nx, x );
 //
@@ -153,7 +164,16 @@ int main ( )
       data_unit << "\n";
       nt_step = nt_step + 100;
     }
+	l2_error.push_back(L2_error ( nx, x, u, c, t ));
   }
+	/*
+	cout << "l2_error: [";
+	for(i=0;i<l2_error.size();i++)
+	{
+		cout << l2_error[i] << " ";
+	}
+	cout << "]\n";
+	*/
 //
 //  Close the data file once the computation is done.
 //
@@ -557,21 +577,23 @@ void timestamp ( )
 
 //****************************************************************************80
 
-double L2_error ( int nx, double x[], double u[], double c, double t );
+double L2_error ( int nx, double x[], double u[], double c, double t )
 
 //****************************************************************************80
 {
+	// ASSUMES BOUNDS [0,1]
 	double L2_error=0;
 	double analytical = 0;
 	double difference = 0;
 
-	for ( i = 0; i < nx; i++ )
+	//cout << "Bounds for bump are [" << fmod((0.25 + c*t), 1.) << "," << fmod((0.75 + c*t), 1.) << "\n";
+	for ( int i = 0; i < nx; i++ )
 	{
 		// the window with the sine curve shifts, this is implemented in the if statement.
-		if  ( 0.25 + c*t %  <= x[i] && x[i] <= 0.75 + c*t )
+		if  ( fmod((0.25 + c*t), 1.)  <= x[i] && x[i] <= fmod((0.75 + c*t), 1.) )
 		{
       		difference = u[i] - ( pow( sin( 2*M_PI* (x[i]-.25 + c*t) ) , 2 ) + 1 ) ;
-			L2_error += pow(difference * dx, 2.);
+			L2_error += pow(difference * (1./nx), 2.);
     	}
     	else
     	{
@@ -579,9 +601,4 @@ double L2_error ( int nx, double x[], double u[], double c, double t );
     	}
   	}
 	L2_error = sqrt(L2_error);
-
-
-
-
-
 }
