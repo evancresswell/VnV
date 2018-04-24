@@ -200,8 +200,8 @@ def benchmark_multiError(filenames,errors, dxs, orders):
 			print 'ORDER ' +str(order)		
 			sims_l2 = l2_orders[j]
 			sims_l1 = l1_orders[j]
-			print sims_l2
-			print sims_l1
+			print "L2 error "+str( sims_l2)
+			print "L1 error "+ str(sims_l1)
 			for pp,error in enumerate(errors):
 				if(pp==0):
 					for l ,l2_er in enumerate(sims_l2):
@@ -712,7 +712,7 @@ pi = math.pi
 c = .5
 #c = .6
 
-orders = [1,2,3]
+orders = [1,2]
 #nxs = [10,20,40,80,160,320]
 nxs = [16,32,64,128]
 #nxs = [64]
@@ -761,15 +761,15 @@ errorTypes = [1,2]
 #for i,nx in enumerate(nxs):	
 	#plotAnimations(i,orders,nx) # plots solution for given order, nx
 	#plotAnimations_square(i,orders,nx) # plots solution for given order, nx
-#for nx_index, nx in enumerate(nxs):
+for nx_index, nx in enumerate(nxs):
 	#plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
-	#plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
+	plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
 	#plotErrorTimeCourse(errorFile2,nx_index,nxs[nx_index],orders,errorType2)
 	
 #benchmark(errorFile1,errorType1, dxs,orders)
 #benchmark_multiError(errorFiles,errorTypes, dxs,orders)
 nx_index = 2
-countTransitionNodes(orders,nx_index)
+#countTransitionNodes(orders,nx_index)
 #---------------READ IN ERRORS---------------------#
 sims_l2 = []
 sims_l1 = []
