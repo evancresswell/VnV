@@ -1254,7 +1254,7 @@ int main(int argc,char* argv[])
 	// define dt to satisfy satisfy CFL condition
 	dt = c*(dx/fabs(vel));
 	//dt =.005;
-	t_final = 5;
+	//t_final = 5;
 	t_final = 10*M_PI;
 	//t_final = 500;
 	//t_final = 5*dt;
@@ -1294,10 +1294,10 @@ int main(int argc,char* argv[])
 	//iterate through cells not boundary
 	for(int i=0 ; i<a_len ; i++)
 	{
-		a[i] = sin(x[i]);
+		//a[i] = sin(x[i]);
 		cout << "i/a_len = " << (double)i/a_len << "\n";
 		// square wave
-		/*
+		//*
 		if((double)i/a_len<.4 || (double)i/a_len>.6)
 			a[i] = 1.;
 		else

@@ -1,6 +1,7 @@
 import sys,os
 import math
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
@@ -29,7 +30,7 @@ def plotErrorTimeCourse( fileName,i,nx,orders,errorType ):
 			plt.plot(time, l2s[j], label=errorType+' Order '+str(order))
 
 		#plt.ylim([0,1])
-		plt.title(str(nx) + ' Points' )
+		plt.title(str(nx) + ' Points',fontsize=20 )
 		plt.xlabel('t')
 		plt.ylabel('Error')
 		plt.legend()
@@ -40,6 +41,8 @@ def plotErrorTimeCourse_multi( fileNames,errorTypes,i,nx,orders):
 		l2s = []
 		l1s = []
 		dts = []
+		matplotlib.rc('xtick',labelsize=50)
+		matplotlib.rc('ytick',labelsize=50)
 
 		# i is the nx index
 		for k,fileName in enumerate(fileNames):
@@ -70,9 +73,11 @@ def plotErrorTimeCourse_multi( fileNames,errorTypes,i,nx,orders):
 					plt.plot(time, l1s[j],linewidth=10, label='L1: Order '+str(order),marker='*')
 
 		#plt.ylim([0,1])
-		plt.title('$n_x$=' + str(nx)  )
-		plt.xlabel('t')
-		plt.ylabel('Error')
+		#plt.title('$n_x$=' + str(nx)  )
+		plt.title(str(nx) + ' Points',fontsize=60 )
+		plt.ylim([0,.5])
+		plt.xlabel('t',fontsize=50)
+		plt.ylabel('Error',fontsize=50)
 		plt.legend(prop={'size': 50})
 
 		plt.show()
@@ -112,9 +117,13 @@ def countTransitionNodes(orders,nx_index):
 			print order
 			c =8
 			x=[c*t**(1./(order+1)) for t in times]
-			plt.plot(times,trans_order[i],label='Order '+str(order))	
-			plt.plot(times,x,label='Order '+str(order)+' Reference')	
-		plt.legend()
+			plt.plot(times,trans_order[i],linewidth=10,label='Order '+str(order))	
+			plt.plot(times,x,linewidth=10,label='Order '+str(order)+' Reference')	
+
+		plt.title(str(nx) + ' Points',fontsize=60 )
+		plt.xlabel('t',fontsize=50)
+		plt.ylabel('$N_{tr}$',fontsize=50)
+		plt.legend(prop={'size': 50})
 		plt.show()
 
 		print transitionNodes
@@ -150,13 +159,13 @@ def benchmark_multiError(filenames,errors, dxs, orders):
 					#nxs = np.asarray(nxs[::-1])
 					if(order==1):
 						x1 = [1.e-2*a for a in dxs] 
-						plt.loglog(dxs, x1,label='$1^{st}$ Order',linestyle='-.') 
+						plt.loglog(dxs, x1,linewidth=5,label='$1^{st}$ Order',linestyle='-.') 
 					if(order==2):
 						x2 = [1.e-2*a**2 for a in dxs]
-						plt.loglog(dxs, x2,label='$2^{nd}$ Order',linestyle='-.') 
+						plt.loglog(dxs, x2,linewidth=5,label='$2^{nd}$ Order',linestyle='-.') 
 					if(order==3):
 						x3 = [1.e-2*a**3 for a in dxs]
-						plt.loglog(dxs, x3,label='$3^{rd}$ Order',linestyle='-.') 
+						plt.loglog(dxs, x3,linewidth=5,label='$3^{rd}$ Order',linestyle='-.') 
 			if(k==1):
 				for j,order in enumerate(orders):
 					sims_l1 = []
@@ -181,9 +190,9 @@ def benchmark_multiError(filenames,errors, dxs, orders):
 				#print dxs
 				print l2_orders[j]	
 				if(k==0):
-					plt.plot(dxs, l2_orders[j], label='L'+str(errors[k])+' Order '+str(order),marker = '*')
+					plt.plot(dxs, l2_orders[j],linewidth=10, label='L'+str(errors[k])+' Order '+str(order),marker = '*')
 				if(k==1):
-					plt.plot(dxs, l1_orders[j], label='L'+str(errors[k])+' Order '+str(order),marker = 'o')
+					plt.plot(dxs, l1_orders[j],linewidth=10, label='L'+str(errors[k])+' Order '+str(order),marker = 'o')
 				
 		for j,order in enumerate(orders):
 			roc_l2 = []
@@ -211,11 +220,10 @@ def benchmark_multiError(filenames,errors, dxs, orders):
 			print roc_l1
 			print 'Done Plotting Errors'
 
-
-		plt.title('Order of Convergence')
-		plt.xlabel('$dx$')
-		plt.ylabel('Error')
-		plt.legend()
+		plt.title('Order of Convergence',fontsize=60 )
+		plt.xlabel('$dx$',fontsize=50)
+		plt.ylabel('Error',fontsize=50)
+		plt.legend(prop={'size': 50})
 		plt.savefig('benchmark.png')
 		plt.show()
 
@@ -706,7 +714,7 @@ c = .5
 
 orders = [1,2,3]
 #nxs = [10,20,40,80,160,320]
-nxs = [16,32,64]
+nxs = [16,32,64,128]
 #nxs = [64]
 dxs = [(2.*pi)/a for a in nxs]
 orders = [1,2,3]
@@ -745,21 +753,23 @@ for order in orders:
 		#plotAnim_square(i,order,nx) #old plotting for animation and benchmarking
 
 
+matplotlib.rc('xtick',labelsize=50)
+matplotlib.rc('ytick',labelsize=50)
 # ERROR plotting
 errorFiles = [errorFile1, errorFile2]
 errorTypes = [1,2]
-for i,nx in enumerate(nxs):	
-	plotAnimations(i,orders,nx) # plots solution for given order, nx
-	#plotAnimations_square(0,orders,64) # plots solution for given order, nx
-for nx_index, nx in enumerate(nxs):
+#for i,nx in enumerate(nxs):	
+	#plotAnimations(i,orders,nx) # plots solution for given order, nx
+	#plotAnimations_square(i,orders,nx) # plots solution for given order, nx
+#for nx_index, nx in enumerate(nxs):
 	#plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
-	plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
+	#plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
 	#plotErrorTimeCourse(errorFile2,nx_index,nxs[nx_index],orders,errorType2)
 	
 #benchmark(errorFile1,errorType1, dxs,orders)
-benchmark_multiError(errorFiles,errorTypes, dxs,orders)
-nx_index = 1
-#countTransitionNodes(orders,nx_index)
+#benchmark_multiError(errorFiles,errorTypes, dxs,orders)
+nx_index = 2
+countTransitionNodes(orders,nx_index)
 #---------------READ IN ERRORS---------------------#
 sims_l2 = []
 sims_l1 = []
