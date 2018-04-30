@@ -109,7 +109,7 @@ int main ( )
   }
   data_unit << "\n";
 
-  nt_step = 100;
+  nt_step = 10;
 
   cout << "\n";
   cout << "  Number of nodes NX = " << nx << "\n";
@@ -141,7 +141,7 @@ int main ( )
                   << "  " << u[j] << "\n";
       }
       data_unit << "\n";
-      nt_step = nt_step + 100;
+      nt_step = nt_step + 10;
     }
   }
 //
@@ -347,7 +347,7 @@ int i4_wrap ( int ival, int ilo, int ihi )
 }
 //****************************************************************************80
 
-double *initial_condition ( int nx, double x[] )
+double *initial_condition1 ( int nx, double x[] )
 
 //****************************************************************************80
 //

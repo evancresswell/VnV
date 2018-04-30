@@ -420,10 +420,10 @@ def plotAnimations(nx_index, orders, nx):
 			order_sols.append(solutions)
 	
 
-			#plot solution
-			fig, ax = plt.subplots()
-			fig.set_tight_layout(True)
-			#ax.set_ylim((-1.1,1.1))
+		#plot solution
+		fig, ax = plt.subplots()
+		fig.set_tight_layout(True)
+		#ax.set_ylim((-1.1,1.1))
 
 		x = np.linspace(0,2*3.14159,len(solutions[0]))
 		line1, = ax.plot(x,order_sols[0][0],'b-',label='Order 1')
@@ -511,10 +511,10 @@ def plotAnimations(nx_index, orders, nx):
 			order_sols.append(solutions)
 	
 
-			#plot solution
-			fig, ax = plt.subplots()
-			fig.set_tight_layout(True)
-			#ax.set_ylim((-1.1,1.1))
+		#plot solution
+		fig, ax = plt.subplots()
+		fig.set_tight_layout(True)
+		#ax.set_ylim((-1.1,1.1))
 
 		x = np.linspace(0,2*3.14159,len(solutions[0]))
 		for l,order in enumerate(orders):
@@ -715,6 +715,7 @@ c = .5
 orders = [1,2]
 #nxs = [10,20,40,80,160,320]
 nxs = [16,32,64,128]
+nxs = [16,32,64]
 #nxs = [64]
 dxs = [(2.*pi)/a for a in nxs]
 orders = [1,2,3]
@@ -758,12 +759,12 @@ matplotlib.rc('ytick',labelsize=50)
 # ERROR plotting
 errorFiles = [errorFile1, errorFile2]
 errorTypes = [1,2]
-#for i,nx in enumerate(nxs):	
-	#plotAnimations(i,orders,nx) # plots solution for given order, nx
+for i,nx in enumerate(nxs):	
+	plotAnimations(i,orders,nx) # plots solution for given order, nx
 	#plotAnimations_square(i,orders,nx) # plots solution for given order, nx
-for nx_index, nx in enumerate(nxs):
+#for nx_index, nx in enumerate(nxs):
 	#plotErrorTimeCourse(errorFile1,nx_index,nxs[nx_index],orders,errorType1)
-	plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
+	#plotErrorTimeCourse_multi(errorFiles,errorTypes,nx_index,nxs[nx_index],orders)
 	#plotErrorTimeCourse(errorFile2,nx_index,nxs[nx_index],orders,errorType2)
 	
 #benchmark(errorFile1,errorType1, dxs,orders)
