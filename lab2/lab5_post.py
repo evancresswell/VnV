@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from matplotlib import animation
 from itertools import groupby
 
 #---------------------------------------------------------------------------------------------------------------#
@@ -153,257 +154,53 @@ def benchmark_multiError(filenames,errors, dxs, orders):
 		plt.show()
 
 #---------------------------------------------------------------------------------------------------------------#
-def plotAnimations(nx_index, orders, nx):
-		times = []
-		masses = []
-		real_solutions = []
-		order_sols = []
-		order_reals = []
-		lines = []
-		
-
-	
-		#infile = open('scalar_advec'+str(1)+'_mass'+str(i)+'.out','r')
-		#temp = infile.readlines()
-		#for line in temp:
-	#		masses.append(float(line))
-		#print masses
-
-		infile = open('scalar_advec'+str(1)+'_t'+str(nx_index)+'.out','r')
-		temp = infile.readlines()
-		for line in temp:
-			times.append(float(line))
-		#print times
-			
-		
-		for j, order in enumerate(orders):
-			
-			solutions = []
-		
-			infile = open('scalar_advec'+str(order)+'_real'+str(nx_index)+'.out','r')
-			temp = infile.readlines()
-			for line in temp:
-				real_solutions.append([float(x) for x in line.split()])
-			#print real_solutions	
-			#order_reals.append(real_solutions)
-
-			infile = open('scalar_advec'+str(order)+'_sol'+str(nx_index)+'.out','r')
-			temp = infile.readlines()
-			for line in temp:
-				solutions.append([float(x) for x in line.split()])
-
-			print "order " +str(order)+ " Solution hs length " +str(len(solutions[0]))
-			#print solutions	
-			order_sols.append(solutions)
-	
-
-			#plot solution
-			fig, ax = plt.subplots()
-			fig.set_tight_layout(True)
-			#ax.set_ylim((-1.1,1.1))
-
-		x = np.linspace(0,2*3.14159,len(solutions[0]))
-		line1, = ax.plot(x,order_sols[0][0],'b-',label='Order 1')
-		line2, = ax.plot(x,order_sols[1][0],'r-',label='Order 2')
-		line3, = ax.plot(x,order_sols[2][0],'g-',label='Order 3')
-		line4, = ax.plot(x,real_solutions[0],linestyle='-.',color='r',label='Solution')
-
-		#lines.append( ax.plot(x,solutions[0],'b-',label='Order '+str(order)))
-
-		for j,order in enumerate(orders):
-			print order_sols[j][10]
-
-	
-		def update(i):
-			label = 't = {0}'.format(times[i])
-			#print(label)
-			# Update the line and the axes (with a new xlabel). Return a tuple of
-			# "artists" that have to be redrawn for this frame.
-			line4.set_ydata(real_solutions[i])
-			line1.set_ydata(order_sols[0][i])		
-			line2.set_ydata(order_sols[1][i])		
-			line3.set_ydata(order_sols[2][i])		
-				#line[j].set_ydata(solutions[i])
-			ax.set_xlabel(label)
-			ax.legend()
-			if(i % 2000):
-				plt.savefig('solution_plot_i'+str(i)+'_t'+str(times[i])+'_nx'+str(nx)+'_o'+str(order)+'.png')
-			return line, ax
-
-		if __name__ == '__main__':
-			# FuncAnimation will call the 'update' function for each frame; here
-			# animating over 10 frames, with an interval of 200ms between frames.
-			anim = FuncAnimation(fig, update, frames=np.arange(0, len(solutions)), interval=200)
-			if len(sys.argv) > 1 and sys.argv[1] == 'save':
-				anim.save('line.gif', dpi=80, writer='imagemagick')
-			else:
-				# plt.show() will just loop the animation forever.
-				plt.show()
-
-#---------------------------------------------------------------------------------------------------------------#
 
 
 #---------------------------------------------------------------------------------------------------------------#
-def plotAnimations(nx_index, orders, nx):
-		times = []
-		masses = []
-		real_solutions = []
-		order_sols = []
-		order_reals = []
-		lines = []
-		
+def plotAnim3(ts, x, us, real_sols):
+		fig = plt.figure()
 
-	
-		#infile = open('scalar_advec'+str(1)+'_mass'+str(i)+'.out','r')
-		#temp = infile.readlines()
-		#for line in temp:
-	#		masses.append(float(line))
-		#print masses
+		ax = plt.axes(xlim=(0, 2), ylim=(0, 100))
+		ax = plt.axes(xlim=(-.5, 1.5), ylim=(.5, 2.5))
 
-		infile = open('scalar_advec'+str(1)+'_t'+str(nx_index)+'.out','r')
-		temp = infile.readlines()
-		for line in temp:
-			times.append(float(line))
-		#print times
-			
-		
-		for j, order in enumerate(orders):
-			
-			solutions = []
-		
-			infile = open('scalar_advec'+str(order)+'_real'+str(nx_index)+'.out','r')
-			temp = infile.readlines()
-			for line in temp:
-				real_solutions.append([float(x) for x in line.split()])
-			#print real_solutions	
-			#order_reals.append(real_solutions)
+		N = 2
+		lines = [plt.plot([], [])[0] for _ in range(N)]
+		sols = [us, real_sols]
 
-			infile = open('scalar_advec'+str(order)+'_sol'+str(nx_index)+'.out','r')
-			temp = infile.readlines()
-			for line in temp:
-				solutions.append([float(x) for x in line.split()])
+		def init():
+			for i, line in enumerate(lines):
+				line.set_data(x, sols[i][0])
+			return lines
 
-			print "order " +str(order)+ " Solution hs length " +str(len(solutions[0]))
-			#print solutions	
-			order_sols.append(solutions)
-	
+		def animate(i):
+			for j,line in enumerate(lines):
+				line.set_data(x, sols[j][i])
+    			return lines
 
-			#plot solution
-			fig, ax = plt.subplots()
-			fig.set_tight_layout(True)
-			#ax.set_ylim((-1.1,1.1))
+		anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=20, blit=True)
 
-		x = np.linspace(0,2*3.14159,len(solutions[0]))
-		for l,order in enumerate(orders):
-			if(l==0):
-				line1, = ax.plot(x,order_sols[0][0],'b-',label='Order 1')
-			if(l==1):
-				line2, = ax.plot(x,order_sols[1][0],'c-',label='Order 2')
-			if(l==2):
-				line3, = ax.plot(x,order_sols[2][0],'g-',label='Order 3')
-		line4, = ax.plot(x,real_solutions[0],linestyle='-.',color='r',label='Solution')
+		plt.show()
+		exit(0)
 
-		#lines.append( ax.plot(x,solutions[0],'b-',label='Order '+str(order)))
-
-		plt.title('$n_x=$'+str(nx))
-		for j,order in enumerate(orders):
-			print order_sols[j][10]
-
-	
-		def update(i):
-			label = 't = {0}'.format(times[i])
-			#print(label)
-			# Update the line and the axes (with a new xlabel). Return a tuple of
-			# "artists" that have to be redrawn for this frame.
-			line4.set_ydata(real_solutions[i])
-			for l,order in enumerate(orders):
-				if(l==0):
-					line1.set_ydata(order_sols[0][i])		
-				if(l==1):
-					line2.set_ydata(order_sols[1][i])		
-				if(l==2):
-					line3.set_ydata(order_sols[2][i])		
-				#line[j].set_ydata(solutions[i])
-			ax.set_xlabel(label)
-			ax.legend()
-			if(i%1000):
-				plt.savefig('solution_plot_t'+str(times[i])+'_nx'+str(nx)+'.png')
-			return line, ax
-
-		if __name__ == '__main__':
-			# FuncAnimation will call the 'update' function for each frame; here
-			# animating over 10 frames, with an interval of 200ms between frames.
-			anim = FuncAnimation(fig, update, frames=np.arange(0, len(solutions)), interval=200)
-			if len(sys.argv) > 1 and sys.argv[1] == 'save':
-				anim.save('line.gif', dpi=80, writer='imagemagick')
-			else:
-				# plt.show() will just loop the animation forever.
-				plt.show()
-
-#---------------------------------------------------------------------------------------------------------------#
-
-
-
-#---------------------------------------------------------------------------------------------------------------#
-def plotAnim(i, order, nx):
-		times = []
-		masses = []
-		solutions = []
-		real_solutions = []
-
-
-		infile = open('scalar_advec'+str(order)+'_sol'+str(i)+'.out','r')
-		temp = infile.readlines()
-		for line in temp:
-			solutions.append([float(x) for x in line.split()])
-		#print solutions	
-
-		infile = open('scalar_advec'+str(order)+'_real'+str(i)+'.out','r')
-		temp = infile.readlines()
-		for line in temp:
-			real_solutions.append([float(x) for x in line.split()])
-		#print real_solutions	
-
-
-		infile = open('scalar_advec'+str(order)+'_mass'+str(i)+'.out','r')
-		temp = infile.readlines()
-		for line in temp:
-			masses.append(float(line))
-		#print masses
-
-		infile = open('scalar_advec'+str(order)+'_t'+str(i)+'.out','r')
-		temp = infile.readlines()
-		for line in temp:
-			times.append(float(line))
-		#print times
-
-
-		#plot solution
 		fig, ax = plt.subplots()
 		fig.set_tight_layout(True)
-
-		x = np.linspace(0,2*3.14159,len(solutions[0]))
-		#ax.set_ylim((-1.1,1.1))
-		line1, = ax.plot(x,solutions[0],'b-',label='Numerical Solution')
-		line2, = ax.plot(x,real_solutions[0],linestyle='-.',color='r',label='Solution')
+		line1, = ax.plot(x,us[0],'b-',label='Numerical Solution')
+		line2, = ax.plot(x,real_sols[0],linestyle='-.',color='r',label='Solution')
 
 		def update(i):
-			label = 't = {0}'.format(times[i])
-			#print(label)
-			# Update the line and the axes (with a new xlabel). Return a tuple of
-			# "artists" that have to be redrawn for this frame.
-			line2.set_ydata(real_solutions[i])
-			line1.set_ydata(solutions[i])
+			label = 't = {0}'.format(ts[i])
+			line1.set_ydata(us[i])
+			line2.set_ydata(real_sols[i])		
 			ax.set_xlabel(label)
 			ax.legend()
-			if(i%1000):
-				plt.savefig('solution_plot_t'+str(times[i])+'_nx'+str(nx)+'_o'+str(order)+'.png')
-			return line, ax
+			if(i%10):
+				plt.savefig('solution_plot_t'+str(ts[i])+'.png')
+			return lines, ax
 
 		if __name__ == '__main__':
 			# FuncAnimation will call the 'update' function for each frame; here
 			# animating over 10 frames, with an interval of 200ms between frames.
-			anim = FuncAnimation(fig, update, frames=np.arange(0, len(solutions)), interval=200)
+			anim = FuncAnimation(fig, update, frames=np.arange(0, len(ts)), interval=200)
 			if len(sys.argv) > 1 and sys.argv[1] == 'save':
 				anim.save('line.gif', dpi=80, writer='imagemagick')
 			else:
@@ -411,30 +208,125 @@ def plotAnim(i, order, nx):
 				plt.show()
 
 #---------------------------------------------------------------------------------------------------------------#
+
+
+def plotAnim(ts, x, us, real_sols):
+
+		fig, ax = plt.subplots()
+		fig.set_tight_layout(True)
+		line1, = ax.plot(x,us[0],'b-',label='Numerical Solution')
+		line2, = ax.plot(x,real_sols[0],linestyle='-.',color='r',label='Solution')
+
+		def update(i):
+			label = 't = {0}'.format(ts[i])
+			line1.set_ydata(us[i])
+			line2.set_ydata(real_sols[i])		
+			ax.set_xlabel(label)
+			ax.legend()
+			if(i%10):
+				plt.savefig('solution_plot_t'+str(ts[i])+'.png')
+			return line2, ax
+
+		if __name__ == '__main__':
+			# FuncAnimation will call the 'update' function for each frame; here
+			# animating over 10 frames, with an interval of 200ms between frames.
+			anim = FuncAnimation(fig, update, frames=np.arange(0, len(ts)), interval=200)
+			if len(sys.argv) > 1 and sys.argv[1] == 'save':
+				anim.save('line.gif', dpi=80, writer='imagemagick')
+			else:
+				# plt.show() will just loop the animation forever.
+				plt.show()
+
+#---------------------------------------------------------------------------------------------------------------#
+
+
+#---------------------------------------------------------------------------------------------------------------#
+def plotAnim2(ts, x, us, real_sols):
+
+		fig, ax = plt.subplots()
+		fig.set_tight_layout(True)
+		line1, = ax.plot(x,us[0],'b-',label='Numerical Solution')
+		line2, = ax.plot(x,real_sols[0],linestyle='-.',color='r',label='Solution')
+
+		def update(i):
+			label = 't = {0}'.format(ts[i])
+			line1.set_ydata(us[i])
+			line2.set_ydata(real_sols[i])		
+			ax.set_xlabel(label)
+			ax.legend()
+			if(i%10):
+				plt.savefig('solution_plot_t'+str(ts[i])+'.png')
+			return line1, ax
+
+		if __name__ == '__main__':
+			# FuncAnimation will call the 'update' function for each frame; here
+			# animating over 10 frames, with an interval of 200ms between frames.
+			anim = FuncAnimation(fig, update, frames=np.arange(0, len(ts)), interval=200)
+			if len(sys.argv) > 1 and sys.argv[1] == 'save':
+				anim.save('line.gif', dpi=80, writer='imagemagick')
+			else:
+				# plt.show() will just loop the animation forever.
+				plt.show()
+#---------------------------------------------------------------------------------------------------------------#
+
 
 def gen_data(nxs):
 		"""
 		Run lax and lax wendrof then read in time plots for post processing
 		"""		
 		# generate data
-
+		cour = .5
 		os.system("./prep.x")
 		os.system("ls")
 		for i, nx in enumerate(nxs):
-			cmd_1 = "./lax > o%(nx)s" % locals()
+			cmd_1 = "./lax %(nx)s %(cour)s > o%(nx)s" % locals()
 			os.system(cmd_1)
 			cmd_2 = "mv advection_data.txt lax%(nx)s.txt" %locals()
 			os.system(cmd_2)
 
 		for i, nx in enumerate(nxs):
 			name1 = "lax"+str(nx)+".txt"
-			with open(name1,'r') as f:
-				line = f.readline().splitlines()
-				print "line " + str(line)
-				f.close() 
-			l2 = np.loadtxt(name1,skiprows=1).T
-			print "loadtxt: "+str(l2)
-			#sims_l2.append(l2[-1])
+			#with open(name1,'r') as f:
+			#	line = f.readline().splitlines()
+			#	#print "line " + str(line)
+			#	f.close() 
+			x,t,u = np.loadtxt(name1,skiprows=1).T
+			us = [u[i:i+nx] for i  in xrange(0,len(u),nx)]
+			time = [t[i] for i in xrange(0,len(t),nx)]
+			xs = [x[i:i+nx] for i in xrange(0,len(x),nx)]
+			x = xs[0]
+			#print time
+			#print "loadtxt gives u's: "+str(us)
+
+		# create analytical solution corresponding to output
+		real_sol = []
+		real_sols = []
+		vel = 1.	
+		for i, t in enumerate(time):
+			wrapped = 1
+			#print "t = "+str(t)
+			#print "window: [ " +  str((.25+t*vel)%1. )+", "+ str((.75+t*vel)%1. )+ "]"
+			del real_sol[:]
+			for j, x_val in enumerate(x):
+				if(x_val<= (.75+t*vel)%1. and x_val>= (.25+t*vel)%1. ):
+					real_sol.append( np.sin(2 * math.pi * ( x_val - (.25+t*vel)%1. ) )**2. + 1.)
+					wrapped = 0
+				else:
+					real_sol.append(1.)
+			if(wrapped):
+				del real_sol[:]
+				for j, x_val in enumerate(x):
+					if(x_val<= (.75+t*vel)%1. or x_val>= (.25+t*vel)%1. ):
+						real_sol.append( np.sin(2 * math.pi * ( x_val - (.25+t*vel)%1. ) )**2. + 1.)
+						wrapped = 0
+					else:
+						real_sol.append(1.)
+
+			real_sols.append(real_sol)
+			print real_sol
+
+
+		return us,real_sols, time , x
 
 
 				
@@ -447,10 +339,14 @@ pi = math.pi
 c = .5
 #c = .6
 
+
 nxs = [100]
 dxs = [(2.*pi)/a for a in nxs]
 
-gen_data(nxs)
+us, real_sols, time, x = gen_data(nxs)
+print 'time = '+str( time)
+plotAnim(time, x, us,real_sols)
+
 #orders = [3]
 #We want to read in and plot 
 

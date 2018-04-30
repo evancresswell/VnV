@@ -127,7 +127,7 @@ int main ( int argc, char** argv )
   }
   data_unit << "\n";
 
-  nt_step = 100;
+  nt_step = 10;
 
   cout << "\n";
   cout << "  Number of nodes NX = " << nx << "\n";
@@ -160,7 +160,7 @@ int main ( int argc, char** argv )
                   << "  " << u[j] << "\n";
       }
       data_unit << "\n";
-      nt_step = nt_step + 100;
+      nt_step = nt_step + 10;
     }
 	l2_error.push_back(L2_error ( nx, x, u, c, t ));
   }
