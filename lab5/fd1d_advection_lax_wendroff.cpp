@@ -97,6 +97,8 @@ int main ( int argc, char** argv )
 
   cour = atof(argv[2]);
   dt = cour*dx/c;
+  dt = .0015;
+  printf("dt: %f",dt);
   nt = ceil(1./dt);
 
 

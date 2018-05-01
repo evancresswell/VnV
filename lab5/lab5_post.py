@@ -126,7 +126,7 @@ def gen_data(nxs,k):
 		os.system("ls")
 
 		for i, nx in enumerate(nxs):
-			cmd_1 = "./lax_wen %(nx)s %(cour)s > o%(nx)s" % locals()
+			cmd_1 = "./lax_wen %(nx)s %(cour)s > owen%(nx)s" % locals()
 			os.system(cmd_1)
 			cmd_2 = "mv advection_data.txt lax_wen%(nx)s.txt" %locals()
 			os.system(cmd_2)
@@ -204,11 +204,11 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		plt.loglog(nxs, x1,linewidth=5,label='$1^{st}$ Order',linestyle='-.') 
 		for i, error in enumerate(errors_lax):
 			if(i==0):
-				plt.plot(nxs, errors_lax[i][::-1],linewidth=10, label='$L_2$ Error',marker = '1')
+				plt.plot(nxs, errors_lax[i][::-1],linewidth=5, label='$L_2$ Error',marker = '1')
 			if(i==1):
-				plt.plot(nxs, errors_lax[i][::-1],linewidth=10, label='$L_1$ Error',marker = '2')
+				plt.plot(nxs, errors_lax[i][::-1],linewidth=5, label='$L_1$ Error',marker = '2')
 			if(i==2):
-				plt.plot(nxs, errors_lax[i][::-1],linewidth=10, label='$L_{\infinity}$ Error',marker = '*')
+				plt.plot(nxs, errors_lax[i][::-1],linewidth=5, label='$L_{\infinity}$ Error',marker = '*')
 
 					
 		roc_l2_lax = []

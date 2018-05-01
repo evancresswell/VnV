@@ -107,6 +107,8 @@ int main ( int argc, char** argv )
   // new dt definition
   cour = atof(argv[2]);
   dt = cour*dx/c;
+  dt = .0015;
+  printf("dt: %f",dt);
   nt = ceil(1./dt);
 
   u = initial_condition2 ( nx, x );
