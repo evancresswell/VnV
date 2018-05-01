@@ -78,12 +78,13 @@ def gen_data(nxs,k):
 			xs = [x[i:i+nx] for i in xrange(0,len(x),nx)]
 			us1out = us1
 			tout = time
+			t_lax = time
 			xout = xs[0]
 
 			# create analytical solution corresponding to output
 			real_sols = []
 			vel = 1.	
-			print 'time: '+str(time)
+			#print 'time: '+str(time)
 
 			for  t in time:
 				wrapped = 1
@@ -136,6 +137,10 @@ def gen_data(nxs,k):
 			x,t,u = np.loadtxt(name1,skiprows=1).T
 
 			us2 = [u[i:i+nx] for i  in xrange(0,len(u),nx)]
+			t_wen = [t[i] for i in xrange(0,len(t),nx)]
+			xs = [x[i:i+nx] for i in xrange(0,len(x),nx)]
+			x_wen = xs[0]
+
 			us2out = us2
 
 			# create analytical solution corresponding to output
@@ -145,6 +150,10 @@ def gen_data(nxs,k):
 		print len(us1out)
 		print len(nx_us1)
 		print len(nx_us2)
+		print "Time for lax: " + str(t_lax)
+		print "Time for wen: " + str(t_wen)
+		print "x for lax: " + str(xout)
+		print "x for wen: " + str(x_wen)
 
 
 		return  tout, xout, us1out, us2out, rsout, nx_us1, nx_us2, nx_sols
