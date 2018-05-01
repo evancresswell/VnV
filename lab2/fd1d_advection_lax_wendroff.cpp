@@ -8,7 +8,8 @@
 
 using namespace std;
 
-int main ( );
+//int main ( );
+int main ( int argc, char** argv );
 int i4_modp ( int i, int j );
 int i4_wrap ( int ival, int ilo, int ihi );
 double *initial_condition1 ( int nx, double x[] );
@@ -18,7 +19,8 @@ void timestamp ( );
 
 //****************************************************************************80
 
-int main ( )
+//int main ( )
+int main ( int argc, char** argv )
 
 //****************************************************************************80
 //
@@ -62,6 +64,7 @@ int main ( )
   double *u;
   double *unew;
   double *x;
+  double cour;
 
   timestamp ( );
   cout << "\n";
@@ -74,12 +77,14 @@ int main ( )
   cout << "    0.0 <= x <= 1.0\n";
   cout << "  with periodic boundary conditions, and\n";
   cout << "  with a given initial condition\n";
-  cout << "    u(0,x) = (10x-4)^2 (6-10x)^2 for 0.4 <= x <= 0.6\n";
-  cout << "           = 0 elsewhere.\n";
+  //cout << "    u(0,x) = (10x-4)^2 (6-10x)^2 for 0.4 <= x <= 0.6\n";
+  //cout << "           = 0 elsewhere.\n";
   cout << "\n";
   cout << "  We modify the FTCS method using the Lax-Wendroff method:\n";
 
   nx = 101;
+  nx = atof(argv[1]);
+
   dx = 1.0 / ( double ) ( nx - 1 );
   a = 0.0;
   b = 1.0;
@@ -90,11 +95,16 @@ int main ( )
   c1 = 0.5 *       c * dt / dx;
   c2 = 0.5 * pow ( c * dt / dx, 2 );
 
+  cour = atof(argv[2]);
+  dt = cour*dx/c;
+  nt = ceil(1./dt);
+
+
   //u = initial_condition1 ( nx, x );
   u = initial_condition2 ( nx, x );
-//
-//  Open data file, and write solutions as they are computed.
-//
+  //
+  //  Open data file, and write solutions as they are computed.
+  //
   data_unit.open ( data_filename.c_str ( ) );
 
   t = 0.0;

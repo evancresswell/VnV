@@ -200,7 +200,7 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		errors_lax.append(l1_error_lax)
 		errors_lax.append(linf_error_lax)
 
-		x1 = [1.e-2*a for a in nxs] 
+		x1 = [1.e2*a for a in nxs] 
 		plt.loglog(nxs, x1,linewidth=5,label='$1^{st}$ Order',linestyle='-.') 
 		for i, error in enumerate(errors_lax):
 			if(i==0):
@@ -257,15 +257,15 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		errors_wen.append(l1_error_wen)
 		errors_wen.append(linf_error_wen)
 
-		x1 = [1.e-2*a for a in nxs] 
+		x1 = [1.e2*a for a in nxs] 
 		plt.loglog(nxs, x1,linewidth=5,label='$1^{st}$ Order',linestyle='-.') 
 		for i, error in enumerate(errors_wen):
 			if(i==0):
-				plt.plot(nxs, errors_wen[i][::-1],linewidth=10, label='$L_2$ Error',marker = '1')
+				plt.plot(nxs, errors_wen[i][::-1],linewidth=5, linestyle='--', label='$L_2$ Error',marker = '1')
 			if(i==1):
-				plt.plot(nxs, errors_wen[i][::-1],linewidth=10, label='$L_1$ Error',marker = '2')
+				plt.plot(nxs, errors_wen[i][::-1],linewidth=5, linestyle='--', label='$L_1$ Error',marker = '2')
 			if(i==2):
-				plt.plot(nxs, errors_wen[i][::-1],linewidth=10, label='$L_{\infinity}$ Error',marker = '*')
+				plt.plot(nxs, errors_wen[i][::-1],linewidth=5, linestyle='--', label='$L_{\infinity}$ Error',marker = '*')
 
 					
 		roc_l2_wen = []
@@ -288,6 +288,7 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 						p_linf_wen = np.log(error[l-1]/linf_er)/np.log(2)
 						roc_linf.append(p_linf)
 
+
 		print "L2 ERROR_wen:"
 		print roc_l2_wen
 		print "L1 ERROR_wen:"
@@ -297,9 +298,14 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		print 'Done Plotting Errors'
 		#----------------------------------------------------------------------------------#
 		plt.title('Order of Convergence',fontsize=60 )
-		plt.xlabel('$nx$',fontsize=50)
-		plt.ylabel('Error',fontsize=50)
-		plt.legend(prop={'size': 50})
+
+		#plt.xlabel('$nx$',fontsize=50)
+		#plt.ylabel('Error',fontsize=50)
+		#plt.legend(prop={'size': 50})
+		plt.ylabel('Error')
+		plt.xlabel('$nx$')
+		plt.legend()
+
 		plt.savefig('benchmark.png')
 		plt.show()
 
@@ -328,6 +334,6 @@ time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1)
 #plotAnim(time, x, us,real_sols)
 plotAnim(time, x, us1, us2, real_sols)
 
-#benchmark_lax(nx_us1,nx_us2,nx_sols,nxs)
+benchmark_lax(nx_us1,nx_us2,nx_sols,nxs)
 
 
