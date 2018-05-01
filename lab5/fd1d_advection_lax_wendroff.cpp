@@ -14,6 +14,8 @@ int i4_modp ( int i, int j );
 int i4_wrap ( int ival, int ilo, int ihi );
 double *initial_condition1 ( int nx, double x[] );
 double *initial_condition2 ( int nx, double x[] );
+double *initial_condition3 ( int nx, double x[] );
+double *initial_condition4 ( int nx, double x[] );
 double *r8vec_linspace_new ( int n, double a, double b );
 void timestamp ( );
 
@@ -96,14 +98,16 @@ int main ( int argc, char** argv )
   c2 = 0.5 * pow ( c * dt / dx, 2 );
 
   cour = atof(argv[2]);
-  dt = cour*dx/c;
+  dt = (cour*dx)/c;
   dt = .0015;
   printf("dt: %f",dt);
   nt = ceil(1./dt);
 
 
   //u = initial_condition1 ( nx, x );
-  u = initial_condition2 ( nx, x );
+  //u = initial_condition2 ( nx, x );
+  u = initial_condition3 ( nx, x );
+  //u = initial_condition4 ( nx, x );
   //
   //  Open data file, and write solutions as they are computed.
   //
@@ -450,7 +454,79 @@ double *initial_condition2 ( int nx, double x[] )
 }
 //****************************************************************************80
 
+double *initial_condition3 ( int nx, double x[] )
 
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    INITIAL_CONDITION3 sets the initial condition.
+//
+//  Author:
+//
+//  Evan Cresswel xD
+//
+//  Parameters:
+//
+//    Input, int NX, the number of nodes.
+//
+//    Input, double X[NX], the coordinates of the nodes.
+//
+//    Output, double INITIAL_CONDITION[NX], the value of the initial condition.
+//
+{
+  int i;
+  double *u;
+
+  u = new double[nx];
+
+  for ( i = 0; i < nx; i++ )
+  {
+     u[i] = sin( 2*M_PI*x[i] ) +1.  ;
+  }
+  return u;
+}
+//****************************************************************************80
+
+double *initial_condition4 ( int nx, double x[] )
+
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    INITIAL_CONDITION3 sets the initial condition.
+//
+//  Author:
+//
+//  Evan Cresswel xD
+//
+//  Parameters:
+//
+//    Input, int NX, the number of nodes.
+//
+//    Input, double X[NX], the coordinates of the nodes.
+//
+//    Output, double INITIAL_CONDITION[NX], the value of the initial condition.
+//
+{
+  int i;
+  double *u;
+
+  u = new double[nx];
+
+  for ( i = 0; i < nx; i++ )
+  {
+    if  ( 0.25 <= x[i] && x[i] <= 0.75 )
+    {
+      u[i] =  2. ;
+    }
+    else
+    {
+      u[i] = 1.0;
+    }
+  }
+  return u;
+}
 //****************************************************************************80
 
 double *r8vec_linspace_new ( int n, double a_first, double a_last )
