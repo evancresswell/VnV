@@ -175,40 +175,103 @@ def plot_par_vs_temp(pre_par,post_par,T):
 		if(i==0):
 			plt.plot(x,T,'.')
 			plt.xlabel('$p$')
+			plt.ylabel('$T$')
 			plt.title('Pressure')
 			plt.show()
 		if(i==1):
 			plt.plot(x,T,'.')
 			plt.xlabel(r'$\rho$')
 			plt.title('Density')
+			plt.ylabel('$T$')
 			plt.show()
 		if(i==2):
 			plt.plot(x,T,'.')
 			plt.xlabel('$\gamma$')
-			plt.title('Gas Constant')
+			plt.title('Gas')
+			plt.ylabel('$T$')
 			plt.show()
 		if(i==3):
 			plt.plot(x,T,'.')
 			plt.xlabel('$M$')
 			plt.title('Mach Number')
+			plt.ylabel('$T$')
 			plt.show()
 
 
 def plot_std_vs_mean(EEs):
+
 	tlist = list(zip(*EEs))
 	std = []
 	mu = []
+	
 	for line in tlist:
 		std.append(np.std(line))
 		mu.append(np.mean(line))
-	plt.plot(mu,std, '.')
+	plt.plot(mu,std, '.',markersize=20)
 	plt.title('$\mu$ vs $\sigma$')
 	plt.xlabel('$\mu$')	
 	plt.ylabel('$\sigma$')	
 	plt.show()
 
+	# zoom plot
+	std = []
+	mu = []
+	
+	for i,line in enumerate(tlist):
+		if(i!=1):
+			std.append(np.std(line))
+			mu.append(np.mean(line))
+	plt.plot(mu,std, '.',markersize=20)
+	plt.title('$\mu$ vs $\sigma$')
+	plt.xlabel('$\mu$')	
+	plt.ylabel('$\sigma$')	
+	plt.show()
+
+
 def plot_other(pre_par,post_par):
-	print 'still to doo'
+
+	# Density vs Pressure
+	# [  p  rho  gamma  M  ]
+	x = []						
+	y = []
+	for i,line in enumerate(pre_par):
+		x.append(line[1])						
+		y.append(post_par[i][0])						
+	plt.plot(x,y,'.')
+	plt.xlabel(r'$\rho$')
+	plt.ylabel('p')
+	plt.title('Density vs Pressure')
+	plt.show()
+
+	# Pressure vs Mach
+	# [  p  rho  gamma  M  ]
+	x = []						
+	y = []
+
+	for i,line in enumerate(pre_par):
+		x.append(line[1])						
+		y.append(post_par[i][3])						
+	plt.plot(x,y,'.')
+	plt.xlabel(r'$\rho$')
+	plt.ylabel('$M$')
+	plt.title('Pressure vs Mach Number')
+	plt.show()
+
+
+	# Gamma vs Mach
+	# [  p  rho  gamma  M  ]
+	x = []						
+	y = []
+	for i,line in enumerate(pre_par):
+		x.append(line[2])						
+		y.append(post_par[i][3])						
+	plt.plot(x,y,'.')
+	plt.xlabel('$\gamma$')
+	plt.ylabel('$M$')
+	plt.title('Gamma vs Mach Number')
+	plt.show()
+
+
 
 #------------------------------------------Run Simulation------------------------------------------------------#
 """
@@ -236,7 +299,7 @@ traj_matrix = get_trajectories(k)
 
 pre_par,post_par,T,EEs = morris(traj_matrix, ps, rhos, gammas, Ms)
 
-#plot_par_vs_temp(pre_par,post_par,T)
+plot_par_vs_temp(pre_par,post_par,T)
 
 plot_std_vs_mean(EEs)
 plot_other(pre_par,post_par)
