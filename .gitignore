@@ -4,4 +4,6 @@
 *.swp
 o*
 scalar_advec
-lab2/*.txt
+lab5/*.txt
+lab5/lax
+lab5/lax_wen
