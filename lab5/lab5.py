@@ -166,7 +166,7 @@ def gen_data_square(nxs,k):
 #--------------------------------------------------------------------------------------------------------------#
 
 
-def gen_data_sin(nxs,k):
+def gen_data_sin(nxs,k,cour):
 		"""
 		Run lax and lax wendrof then read in time plots for post processing
 		"""		
@@ -175,7 +175,6 @@ def gen_data_sin(nxs,k):
 		# ---------------Generate Data For Lax---------------------------------------#
 		nx_us1 = []
 		nx_sols = []			
-		cour = .5
 
 		os.system("./prep.x")
 		os.system("ls")
@@ -267,7 +266,7 @@ def gen_data_sin(nxs,k):
 #--------------------------------------------------------------------------------------------------------------#
 
 
-def gen_data(nxs,k):
+def gen_data(nxs,k,cour):
 		"""
 		Run lax and lax wendrof then read in time plots for post processing
 		"""		
@@ -276,7 +275,7 @@ def gen_data(nxs,k):
 		# ---------------Generate Data For Lax---------------------------------------#
 		nx_us1 = []
 		nx_sols = []			
-		cour = .5
+		xout = []
 
 		os.system("./prep.x")
 		os.system("ls")
@@ -297,7 +296,7 @@ def gen_data(nxs,k):
 			us1out = us1
 			tout = time
 			t_lax = time
-			xout = xs[0]
+			xout.append( xs[0])
 
 			# create analytical solution corresponding to output
 			real_sols = []
@@ -326,6 +325,7 @@ def gen_data(nxs,k):
 				#print real_sol
 				real_sols.append(real_sol)
 			rsout = real_sols
+			#print us1[-1]
 			nx_us1.append(us1[-1])
 			nx_sols.append(real_sols[-1])
 
@@ -368,11 +368,10 @@ def gen_data(nxs,k):
 		print len(us1out)
 		print len(nx_us1)
 		print len(nx_us2)
-		print "Time for lax: " + str(t_lax)
-		print "Time for wen: " + str(t_wen)
-		print "x for lax: " + str(xout)
-		print "x for wen: " + str(x_wen)
-
+		#print "Time for lax: " + str(t_lax)
+		#print "Time for wen: " + str(t_wen)
+		#print "x for lax: " + str(xout)
+		#print "x for wen: " + str(x_wen)
 
 		return  tout, xout, us1out, us2out, rsout, nx_us1, nx_us2, nx_sols
 
@@ -410,6 +409,20 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		"""
 		nx_us and nx_sols should be the final solution vector for different nxs
 		"""	
+		"""
+		# plot arrays which will be compared..
+		print len(nx_us1[0])
+		for i,nx_1 in enumerate(nx_us_lax):
+			plt.plot(nx_1)
+			plt.plot(nx_sols[i], '--')
+			plt.show()
+		for i,nx_1 in enumerate(nx_us_wen):
+			plt.plot(nx_1)
+			plt.plot(nx_sols[i], '--')
+			plt.show()
+		"""
+
+
 		# ---------------Generate Errors For Lax---------------------------------------#
 		errors_lax = []
 		l2_error_lax = []	
@@ -427,37 +440,40 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		errors_lax.append(l1_error_lax)
 		errors_lax.append(linf_error_lax)
 
-		x1 = [1.e2*a for a in nxs] 
-		plt.loglog(nxs, x1,linewidth=5,label='$1^{st}$ Order',linestyle='-.') 
 		for i, error in enumerate(errors_lax):
 			if(i==0):
-				plt.plot(nxs, errors_lax[i][::-1],linewidth=5, label='$L_2$ Error',marker = '1')
+				plt.plot(nxs, error,linewidth=2.5, label='$L_2$ Lax-Frd',marker = '1')
 			if(i==1):
-				plt.plot(nxs, errors_lax[i][::-1],linewidth=5, label='$L_1$ Error',marker = '2')
+				plt.plot(nxs, error,linewidth=2.5, label='$L_1$ Lax-Frd',marker = '2')
 			if(i==2):
-				plt.plot(nxs, errors_lax[i][::-1],linewidth=5, label='$L_{\infinity}$ Error',marker = '*')
+				plt.plot(nxs, error,linewidth=2.5, label='$L_{\infty}$ Lax_Frd',marker = '*')
 
 					
 		roc_l2_lax = []
 		roc_l1_lax = []
 		roc_linf_lax = []
+
+		x1 = [1.e2*a**-1 for a in nxs] 
+		plt.loglog(nxs, x1,linewidth=2,label='$1{st}$ Order',linestyle='-.') 
+
 		for j,error in enumerate(errors_lax):
 			if(j==0):
 				for l ,l2_er in enumerate(error):
 					if(l>0):
-						p_l2 = np.log(error[l-1]/l2_er)/np.log(2)
+						p_l2 = np.log(l2_er/error[l-1])/np.log(2)
 						roc_l2_lax.append(p_l2)	
 			if(j==2):
 				for l ,l1_er in enumerate(error):
 					if(l>0):
-						p_l1 = np.log(error[l-1]/l1_er)/np.log(2)
+						p_l1 = np.log(l1_er/error[l-1])/np.log(2)
 						roc_l1_lax.append(p_l1)
 			if(j==3):
 				for l ,linf_er in enumerate(error):
 					if(l>0):
-						p_linf_lax = np.log(error[l-1]/linf_er)/np.log(2)
+						p_linf_lax = np.log(linf_er/error[l-1])/np.log(2)
 						roc_linf.append(p_linf)
 
+		print
 		print "L2 ERROR_lax:"
 		print roc_l2_lax
 		print "L1 ERROR_lax:"
@@ -484,15 +500,15 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		errors_wen.append(l1_error_wen)
 		errors_wen.append(linf_error_wen)
 
-		x1 = [1.e2*a for a in nxs] 
-		plt.loglog(nxs, x1,linewidth=5,label='$1^{st}$ Order',linestyle='-.') 
+		x2 = [1.e2*a**-2 for a in nxs] 
+		plt.loglog(nxs, x2,linewidth=2,label='$2{nd}$ Order',linestyle='-.') 
 		for i, error in enumerate(errors_wen):
 			if(i==0):
-				plt.plot(nxs, errors_wen[i][::-1],linewidth=5, linestyle='--', label='$L_2$ Error',marker = '1')
+				plt.plot(nxs, error,linewidth=2.5, linestyle='--', label='$L_2$ Lax-Wen',marker = '1')
 			if(i==1):
-				plt.plot(nxs, errors_wen[i][::-1],linewidth=5, linestyle='--', label='$L_1$ Error',marker = '2')
+				plt.plot(nxs, error,linewidth=2.5, linestyle='--', label='$L_1$ Lax-Wen',marker = '2')
 			if(i==2):
-				plt.plot(nxs, errors_wen[i][::-1],linewidth=5, linestyle='--', label='$L_{\infinity}$ Error',marker = '*')
+				plt.plot(nxs, error,linewidth=2.5, linestyle='--', label='$L_{\infy}$ Lax-Wen',marker = '*')
 
 					
 		roc_l2_wen = []
@@ -502,17 +518,17 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 			if(j==0):
 				for l ,l2_er in enumerate(error):
 					if(l>0):
-						p_l2 = np.log(error[l-1]/l2_er)/np.log(2)
+						p_l2 = np.log(l2_er/error[l-1])/np.log(2)
 						roc_l2_wen.append(p_l2)	
 			if(j==2):
 				for l ,l1_er in enumerate(error):
 					if(l>0):
-						p_l1 = np.log(error[l-1]/l1_er)/np.log(2)
+						p_l1 = np.log(l1_er/error[l-1])/np.log(2)
 						roc_l1_wen.append(p_l1)
 			if(j==3):
 				for l ,linf_er in enumerate(error):
 					if(l>0):
-						p_linf_wen = np.log(error[l-1]/linf_er)/np.log(2)
+						p_linf_wen = np.log(linf_er/error[l-1])/np.log(2)
 						roc_linf.append(p_linf)
 
 
@@ -522,6 +538,7 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		print roc_l1_wen
 		print "L1 ERROR_wen:"
 		print roc_linf_wen
+		print
 		print 'Done Plotting Errors'
 		#----------------------------------------------------------------------------------#
 		plt.title('Order of Convergence',fontsize=60 )
@@ -543,25 +560,14 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 
 pi = math.pi
 
-c = .5
-
+cour = .5
 nxs = [8,16,32,64,128,256]
 
-#time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1)
-time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_sin(nxs,1)
+time, xs, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1,cour)
+#time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_sin(nxs,1,cour)
 #time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_square(nxs,1)
 
-
-#print len(real_sols)
-#print len(us)
-#print len(real_sols[0])
-#print len(us[0])
-#print real_sols[1]
-#print real_sols[2]
-#print real_sols[3]
-#print real_sols[4]
-#plotAnim(time, x, us,real_sols)
-plotAnim(time, x, us1, us2, real_sols)
+plotAnim(time, xs[-1], us1, us2, real_sols)
 
 benchmark_lax(nx_us1,nx_us2,nx_sols,nxs)
 
