@@ -173,28 +173,28 @@ def plot_par_vs_temp(pre_par,post_par,T):
 		for line in pre_par:
 			x.append(line[i]) 	
 		if(i==0):
-			plt.plot(x,T,'.')
-			plt.xlabel('$p$')
-			plt.ylabel('$T$')
-			plt.title('Pressure')
+			plt.plot(x,T,'.',markersize=20)
+			plt.xlabel('$p$',fontsize=60)
+			plt.ylabel('$T$',fontsize=60)
+			plt.title('Pressure',fontsize=60)
 			plt.show()
 		if(i==1):
-			plt.plot(x,T,'.')
-			plt.xlabel(r'$\rho$')
-			plt.title('Density')
-			plt.ylabel('$T$')
+			plt.plot(x,T,'.',markersize=20)
+			plt.xlabel(r'$\rho$',fontsize=60)
+			plt.title('Density',fontsize=60)
+			plt.ylabel('$T$',fontsize=60)
 			plt.show()
 		if(i==2):
-			plt.plot(x,T,'.')
-			plt.xlabel('$\gamma$')
-			plt.title('Gas')
-			plt.ylabel('$T$')
+			plt.plot(x,T,'.',markersize=20)
+			plt.xlabel('$\gamma$',fontsize=60)
+			plt.title('Gas',fontsize=60)
+			plt.ylabel('$T$',fontsize=60)
 			plt.show()
 		if(i==3):
-			plt.plot(x,T,'.')
-			plt.xlabel('$M$')
-			plt.title('Mach Number')
-			plt.ylabel('$T$')
+			plt.plot(x,T,'.',markersize=20)
+			plt.xlabel('$M$',fontsize=60)
+			plt.title('Mach Number',fontsize=60)
+			plt.ylabel('$T$',fontsize=60)
 			plt.show()
 
 
@@ -208,9 +208,9 @@ def plot_std_vs_mean(EEs):
 		std.append(np.std(line))
 		mu.append(np.mean(line))
 	plt.plot(mu,std, '.',markersize=20)
-	plt.title('$\mu$ vs $\sigma$')
-	plt.xlabel('$\mu$')	
-	plt.ylabel('$\sigma$')	
+	plt.title('$\mu$ vs $\sigma$',fontsize=60)
+	plt.xlabel('$\mu$',fontsize=60)	
+	plt.ylabel('$\sigma$',fontsize=60)	
 	plt.show()
 
 	# zoom plot
@@ -222,9 +222,9 @@ def plot_std_vs_mean(EEs):
 			std.append(np.std(line))
 			mu.append(np.mean(line))
 	plt.plot(mu,std, '.',markersize=20)
-	plt.title('$\mu$ vs $\sigma$')
-	plt.xlabel('$\mu$')	
-	plt.ylabel('$\sigma$')	
+	plt.title('$\mu$ vs $\sigma$',fontsize=60)
+	plt.xlabel('$\mu$',fontsize=60)	
+	plt.ylabel('$\sigma$',fontsize=60)	
 	plt.show()
 
 
@@ -237,10 +237,10 @@ def plot_other(pre_par,post_par):
 	for i,line in enumerate(pre_par):
 		x.append(line[1])						
 		y.append(post_par[i][0])						
-	plt.plot(x,y,'.')
-	plt.xlabel(r'$\rho$')
-	plt.ylabel('p')
-	plt.title('Density vs Pressure')
+	plt.plot(x,y,'.',markersize=20)
+	plt.xlabel(r'$\rho$',fontsize=60)
+	plt.ylabel('p',fontsize=60)
+	plt.title('Density vs Pressure',fontsize=60)
 	plt.show()
 
 	# Pressure vs Mach
@@ -251,10 +251,10 @@ def plot_other(pre_par,post_par):
 	for i,line in enumerate(pre_par):
 		x.append(line[1])						
 		y.append(post_par[i][3])						
-	plt.plot(x,y,'.')
-	plt.xlabel(r'$\rho$')
-	plt.ylabel('$M$')
-	plt.title('Pressure vs Mach Number')
+	plt.plot(x,y,'.',markersize=20)
+	plt.xlabel(r'$\rho$',fontsize=60)
+	plt.ylabel('$M$',fontsize=60)
+	plt.title('Pressure vs Mach Number',fontsize=60)
 	plt.show()
 
 
@@ -265,10 +265,10 @@ def plot_other(pre_par,post_par):
 	for i,line in enumerate(pre_par):
 		x.append(line[2])						
 		y.append(post_par[i][3])						
-	plt.plot(x,y,'.')
-	plt.xlabel('$\gamma$')
-	plt.ylabel('$M$')
-	plt.title('Gamma vs Mach Number')
+	plt.plot(x,y,'.',markersize=20)
+	plt.xlabel('$\gamma$',fontsize=60)
+	plt.ylabel('$M$',fontsize=60)
+	plt.title('Gamma vs Mach Number',fontsize=60)
 	plt.show()
 
 
@@ -283,6 +283,10 @@ print p_post(p, gamma, M)
 print temp(rho, p)
 print '\n'
 """
+matplotlib.rc('xtick',labelsize=30)
+matplotlib.rc('ytick',labelsize=30)
+
+
 
 gamma = 1.4
 rho = 1.5e-9
