@@ -61,7 +61,7 @@ def gen_data_square(nxs,k):
 		cour = .5
 
 		os.system("./prep.x")
-		os.system("ls")
+		#os.system("ls")
 
 		for i, nx in enumerate(nxs):
 			cmd_1 = "./lax %(nx)s %(cour)s > o%(nx)s" % locals()
@@ -124,7 +124,7 @@ def gen_data_square(nxs,k):
 		cour = .5
 
 		os.system("./prep.x")
-		os.system("ls")
+		#os.system("ls")
 
 		for i, nx in enumerate(nxs):
 			cmd_1 = "./lax_wen %(nx)s %(cour)s > owen%(nx)s" % locals()
@@ -177,7 +177,7 @@ def gen_data_sin(nxs,k,cour):
 		nx_sols = []			
 
 		os.system("./prep.x")
-		os.system("ls")
+		#os.system("ls")
 
 		for i, nx in enumerate(nxs):
 			cmd_1 = "./lax %(nx)s %(cour)s > o%(nx)s" % locals()
@@ -227,7 +227,7 @@ def gen_data_sin(nxs,k,cour):
 		cour = .5
 
 		os.system("./prep.x")
-		os.system("ls")
+		#os.system("ls")
 
 		for i, nx in enumerate(nxs):
 			cmd_1 = "./lax_wen %(nx)s %(cour)s > owen%(nx)s" % locals()
@@ -278,7 +278,7 @@ def gen_data(nxs,k,cour):
 		xout = []
 
 		os.system("./prep.x")
-		os.system("ls")
+		#os.system("ls")
 
 		for i, nx in enumerate(nxs):
 			cmd_1 = "./lax %(nx)s %(cour)s > o%(nx)s" % locals()
@@ -342,7 +342,7 @@ def gen_data(nxs,k,cour):
 		cour = .5
 
 		os.system("./prep.x")
-		os.system("ls")
+		#os.system("ls")
 
 		for i, nx in enumerate(nxs):
 			cmd_1 = "./lax_wen %(nx)s %(cour)s > owen%(nx)s" % locals()
@@ -460,27 +460,36 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 			if(j==0):
 				for l ,l2_er in enumerate(error):
 					if(l>0):
-						p_l2 = np.log(l2_er/error[l-1])/np.log(2)
+						p_l2 = np.log(error[l-1]/l2_er)/np.log(2)
 						roc_l2_lax.append(p_l2)	
-			if(j==2):
+			if(j==1):
 				for l ,l1_er in enumerate(error):
 					if(l>0):
-						p_l1 = np.log(l1_er/error[l-1])/np.log(2)
+						p_l1 = np.log(error[l-1]/l1_er)/np.log(2)
 						roc_l1_lax.append(p_l1)
-			if(j==3):
+			if(j==2):
 				for l ,linf_er in enumerate(error):
 					if(l>0):
-						p_linf_lax = np.log(linf_er/error[l-1])/np.log(2)
-						roc_linf.append(p_linf)
+						p_linf = np.log(error[l-1]/linf_er)/np.log(2)
+						roc_linf_lax.append(p_linf)
 
 		print
 		print "L2 ERROR_lax:"
+		print errors_lax[0]
+		print "L1 ERROR_lax:"
+		print errors_lax[1]
+		print "L1 ERROR_lax:"
+		print errors_lax[2]
+		print 
+
+		print "ROC L2"
 		print roc_l2_lax
-		print "L1 ERROR_lax:"
+		print "ROC L1"
 		print roc_l1_lax
-		print "L1 ERROR_lax:"
+		print "ROC Linf"
 		print roc_linf_lax
-		print 'Done Plotting Errors'
+		print 
+		print
 		#------------------------------------------------------------------------------#
 
 		# ---------------Generate Errors For Lax-Wendroff----------------------------------#
@@ -518,27 +527,33 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 			if(j==0):
 				for l ,l2_er in enumerate(error):
 					if(l>0):
-						p_l2 = np.log(l2_er/error[l-1])/np.log(2)
+						p_l2 = np.log(error[l-1]/l2_er)/np.log(2)
 						roc_l2_wen.append(p_l2)	
-			if(j==2):
+			if(j==1):
 				for l ,l1_er in enumerate(error):
 					if(l>0):
-						p_l1 = np.log(l1_er/error[l-1])/np.log(2)
+						p_l1 = np.log(error[l-1]/l1_er)/np.log(2)
 						roc_l1_wen.append(p_l1)
-			if(j==3):
+			if(j==2):
 				for l ,linf_er in enumerate(error):
 					if(l>0):
-						p_linf_wen = np.log(linf_er/error[l-1])/np.log(2)
-						roc_linf.append(p_linf)
+						p_linf = np.log(error[l-1]/linf_er)/np.log(2)
+						roc_linf_wen.append(p_linf)
 
 
 		print "L2 ERROR_wen:"
-		print roc_l2_wen
+		print errors_wen[0]
 		print "L1 ERROR_wen:"
-		print roc_l1_wen
+		print errors_wen[1]
 		print "L1 ERROR_wen:"
-		print roc_linf_wen
+		print errors_wen[2]
 		print
+		print "ROC L2"
+		print roc_l2_wen
+		print "ROC L1"
+		print roc_l1_wen
+		print "ROC Linf"
+		print roc_linf_wen
 		print 'Done Plotting Errors'
 		#----------------------------------------------------------------------------------#
 		plt.title('Order of Convergence',fontsize=60 )
@@ -561,7 +576,7 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 pi = math.pi
 
 cour = .5
-nxs = [8,16,32,64,128,256]
+nxs = [8,16,32,64,128,256,512,1024]
 
 time, xs, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1,cour)
 #time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_sin(nxs,1,cour)
