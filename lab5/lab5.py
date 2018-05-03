@@ -576,7 +576,7 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 pi = math.pi
 
 cour = .5
-nxs = [8,16,32,64,128,256,512,1024]
+nxs = [8,16,32,64,128,256,512]
 
 time, xs, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1,cour)
 #time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_sin(nxs,1,cour)
