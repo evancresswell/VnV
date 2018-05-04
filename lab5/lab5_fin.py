@@ -51,6 +51,31 @@ def plotAnim(ts, x, us1, us2, real_solutions):
 
 #--------------------------------------------------------------------------------------------------------------#
 
+def plot_roundoff(time,xs,us1,us2,real_sols):
+		#plot solution
+		nx = 128
+
+		frd_error_trace = []
+		wen_error_trace = []
+		print len(real_sols)
+		print len(us2)
+		for k,sol in enumerate(real_sols):
+			frd_error_trace.append(L1(sol, us1[k], nx))
+			wen_error_trace.append(L1(sol, us2[k], nx))
+	
+		plt.plot(time,frd_error_trace,linewidth=5,label = 'Lax-Frd L1 Error')
+		plt.plot(time,wen_error_trace,linewidth=5,label = 'Lax-Wen L1 Error')
+
+		plt.title('Solution Plot',fontsize=60 )
+		plt.legend(fontsize=40)
+		plt.xlabel('$t$',fontsize=60 )
+		plt.ylabel('$L1$ Error',fontsize=60 )
+
+		plt.show()
+
+#--------------------------------------------------------------------------------------------------------------#
+
+
 
 def gen_data_square(nxs,k):
 		"""
@@ -269,6 +294,147 @@ def gen_data_sin(nxs,k,cour):
 #--------------------------------------------------------------------------------------------------------------#
 
 
+def gen_data_dt(dts,k):
+		"""
+		Run lax and lax wendrof then read in time plots for post processing
+		"""		
+		nx = 128
+
+		# ---------------Generate Data For Lax---------------------------------------#
+		nx_us1 = []
+		nx_sols = []			
+		xout = []
+
+		os.system("./prep.x")
+		#os.system("ls")
+
+		for i, dt in enumerate(dts):
+			cmd_1 = "./lax_dt %(nx)s %(dt)s > o%(dt)s" % locals()
+			os.system(cmd_1)
+			cmd_2 = "mv advection_data.txt lax%(dt)s.txt" %locals()
+			os.system(cmd_2)
+
+		for i, dt in enumerate(dts):
+			name1 = "lax"+str(dt)+".txt"
+			x,t,u = np.loadtxt(name1,skiprows=1).T
+	
+			us1 = [u[i:i+nx] for i  in xrange(0,len(u),nx)]
+			time = [t[i] for i in xrange(0,len(t),nx)]
+			xs = [x[i:i+nx] for i in xrange(0,len(x),nx)]
+			us1out = us1
+			tout = time
+			t_lax = time
+			xout.append( xs[0])
+
+
+			# create analytical solution corresponding to output
+			real_sols = []
+			vel = 1.	
+			#print 'time: '+str(time)
+
+			"""
+			for  t in time:
+				wrapped = 1
+				#print "t = "+str(t)
+				#print "window: [ " +  str((.25+t*vel)%1. )+", "+ str((.75+t*vel)%1. )+ "]"
+				real_sol = []
+				for j, x_val in enumerate(xs[0]):
+					if(x_val<= (.75+t*vel)%1. and x_val>= (.25+t*vel)%1. ):
+						real_sol.append( np.sin(2 * math.pi * ( x_val - (.25+t*vel)%1. ) )**2. + 1.)
+						wrapped = 0
+					else:
+						real_sol.append(1.)
+				if(wrapped):
+					del real_sol[:]
+					for j, x_val in enumerate(xs[0]):
+						if(x_val<= (.75+t*vel)%1. or x_val>= (.25+t*vel)%1. ):
+							real_sol.append( np.sin(2 * math.pi * ( x_val - (.25+t*vel)%1. ) )**2. + 1.)
+							wrapped = 0
+						else:
+							real_sol.append(1.)
+				#print real_sol
+				real_sols.append(real_sol)
+			rsout = real_sols
+			#print us1[-1]
+			nx_sols.append(real_sols[-1])
+			"""
+			nx_us1.append(us1[-1])
+
+		#for i,us in enumerate(nx_us1):
+		#	print 'length of row '+str(i)+' of nx_us1 is '+ str(len(us))
+		#	print 'length of row '+str(i)+' of nx_sols is '+ str(len(nx_sols[i]))
+		#print 'x vector has length ' + str(len(xout))
+		#print 'first analytical solution vector has length ' + str(len(rsout[0]))
+		# ---------------------------------------------------------------------------#
+
+		# ---------------Generate Data For Lax---------------------------------------#
+		# only need to generate the numerical solutions, time, x and real sol should be good
+		nx_us2 = []
+		real_sols = []
+		xreal = []
+		cour = .5
+
+		os.system("./prep.x")
+		#os.system("ls")
+
+		for i, dt in enumerate(dts):
+			cmd_1 = "./lax_wen_dt %(nx)s %(dt)s > owen%(dt)s" % locals()
+			os.system(cmd_1)
+			cmd_2 = "mv advection_data.txt lax_wen%(dt)s.txt" %locals()
+			os.system(cmd_2)
+			cmd_4 = "mv real_sol_data.txt lax_real_sol%(dt)s.txt" %locals()
+			os.system(cmd_4)
+			name2 = "lax_real_sol"+str(dt)+".txt"
+			x_real,t_real,u_real = np.loadtxt(name2,skiprows=1).T
+
+
+
+			real_sols = [u_real[i:i+nx] for i  in xrange(0,len(u_real),nx)]
+			time_real = [t_real[i] for i in xrange(0,len(t_real),nx)]
+			xs_real = [x_real[i:i+nx] for i in xrange(0,len(x_real),nx)]
+			xreal.append( xs_real[0])
+
+			nx_sols.append(real_sols[-1])
+		
+
+			print 'Differences in time and space between cpp real x and t and numerical x and t' 
+			print L2(xs_real[0],xs[0],nx)
+			print
+
+
+
+
+		for i, dt in enumerate(dts):
+			name1 = "lax_wen"+str(dt)+".txt"
+			x,t,u = np.loadtxt(name1,skiprows=1).T
+
+			us2 = [u[i:i+nx] for i  in xrange(0,len(u),nx)]
+			t_wen = [t[i] for i in xrange(0,len(t),nx)]
+			xs = [x[i:i+nx] for i in xrange(0,len(x),nx)]
+			x_wen = xs[0]
+
+			us2out = us2
+
+			# create analytical solution corresponding to output
+			nx_us2.append(us2[-1])
+		# ---------------------------------------------------------------------------#
+		print len(us2out)
+		print len(us1out)
+		print len(nx_us1)
+		print len(nx_us2)
+		#print "Time for lax: " + str(t_lax)
+		#print "Time for wen: " + str(t_wen)
+		#print "x for lax: " + str(xout)
+		#print "x for wen: " + str(x_wen)
+
+		return  tout, xout, us1out, us2out, real_sols, nx_us1, nx_us2, nx_sols
+
+
+
+
+#--------------------------------------------------------------------------------------------------------------#
+
+
 def gen_data(nxs,k,cour):
 		"""
 		Run lax and lax wendrof then read in time plots for post processing
@@ -430,6 +596,110 @@ def Linf(u,sol,nx):
 	linf_error = [abs(u_val-sol[i]) for i,u_val in enumerate(u)]
 	linf = max(linf_error)
 	return linf
+
+
+#-------------------------------------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
+
+
+def benchmark_dt(nx_us_lax,nx_us_wen,nx_sols,dts):
+		
+		"""
+		nx_us and nx_sols should be the final solution vector for different dts
+		"""	
+		"""
+		# plot arrays which will be compared..
+		print len(nx_us1[0])
+		for i,nx_1 in enumerate(nx_us_lax):
+			plt.plot(nx_1)
+			plt.plot(nx_sols[i], '--')
+			plt.show()
+		for i,nx_1 in enumerate(nx_us_wen):
+			plt.plot(nx_1)
+			plt.plot(nx_sols[i], '--')
+			plt.show()
+		"""
+		nx = 128
+
+
+		# ---------------Generate Errors For Lax---------------------------------------#
+		l1_error_lax = []	
+
+		for i, dt in enumerate(dts):
+			l1 = L1(nx_us_lax[i],nx_sols[i],nx)
+			l1_error_lax.append(l1)
+
+		plt.plot(dts, l1_error_lax,linewidth=2.5, label='$L_1$ Lax-Frd',marker = '2')
+
+					
+		roc_l1_lax = []
+
+		x1 = [1.e2*a**-1 for a in dts] 
+		plt.loglog(dts, x1,linewidth=2,label='$1{st}$ Order',linestyle='-.') 
+
+		for l ,l1_er in enumerate(l1_error_lax):
+			if(l>0):
+				p_l1 = np.log(l1_error_lax[l-1]/l1_er)/np.log(2)
+				roc_l1_lax.append(p_l1)
+
+		print
+		print "L1 ERROR_lax:"
+		print l1_error_lax 
+		print 
+
+		print "ROC L1"
+		print roc_l1_lax
+		print 
+		print
+		#------------------------------------------------------------------------------#
+
+		# ---------------Generate Errors For Lax-Wendroff----------------------------------#
+		l1_error_wen = []	
+
+		for i, dt in enumerate(dts):
+			l1 = L1(nx_us_wen[i],nx_sols[i],nx)
+			l1_error_wen.append(l1)
+
+		x2 = [1.e2*a**-2 for a in dts] 
+		plt.loglog(dts, x2,linewidth=2,label='$2{nd}$ Order',linestyle='-.') 
+		plt.plot(dts, l1_error_wen,linewidth=2.5, linestyle='--', label='$L_1$ Lax-Wen',marker = '2')
+
+					
+		roc_l1_wen = []
+		for l ,l1_er in enumerate(l1_error_wen):
+			if(l>0):
+				p_l1 = np.log(l1_error_wen[l-1]/l1_er)/np.log(2)
+				roc_l1_wen.append(p_l1)
+
+
+		print "L1 ERROR_wen:"
+		print l1_error_wen
+		print
+		print "ROC L1"
+		print roc_l1_wen
+		#----------------------------------------------------------------------------------#
+		plt.title('Order of Convergence',fontsize=60 )
+
+		plt.xlabel('$\Delta t$',fontsize=50)
+		plt.ylabel('Error',fontsize=50)
+		plt.legend(prop={'size': 30})
+		#plt.ylabel('Error')
+		#plt.xlabel('$nx$')
+		#plt.legend()
+
+		plt.savefig('benchmark.png')
+		plt.show()
+
+#---------------------------------------------------------------------------------------------------------------#
+
+
+
+
+
+
+
 #-------------------------------------------------------------------------------------------------------------#
 
 
@@ -607,16 +877,24 @@ pi = math.pi
 cour = .5
 nxs = [8,16,32,64,128,256,1024,2048]
 nxs = [8,16,32,64,128,256]
+dts = [.025,.0125,.00625,.003125,.0015625]
+#dts = [.00625]
+#dts = [.0015625]
 
-time, xs, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1,cour)
 #time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_sin(nxs,1,cour)
 #time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_square(nxs,1)
-print us1[0]
-print us1[0]
-print real_sols[0]
 
+
+time, xs, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1,cour)
 plotAnim(time, xs[-1], us1, us2, real_sols)
-
 benchmark_lax(nx_us1,nx_us2,nx_sols,nxs)
+
+
+
+time, xs, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_dt(dts,1)
+plot_roundoff(time,xs,us1,us2,real_sols)
+benchmark_dt(nx_us1,nx_us2,nx_sols,dts)
+
+
 
 
