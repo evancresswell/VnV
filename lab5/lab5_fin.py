@@ -18,11 +18,14 @@ def plotAnim(ts, x, us1, us2, real_solutions):
 
 
 
-		line1, = ax.plot(x,us1[0],'b-',label='Lax-Frd')
-		line2, = ax.plot(x,us2[0],'g-',label='Lax-Wen')
-		line3, = ax.plot(x,real_solutions[0],linestyle='-.',color='r',label='Analytical Solution')
+		line1, = ax.plot(x,us1[0],'b-',linewidth=5,label='Lax-Frd')
+		line2, = ax.plot(x,us2[0],'g-',linewidth=5,label='Lax-Wen')
+		line3, = ax.plot(x,real_solutions[0],linewidth=6,linestyle='-.',color='r',label='Analytical Solution')
 
-		plt.title('Solution Plot')
+		plt.title('Solution Plot',fontsize=60 )
+		plt.xlabel('$t$',fontsize=60 )
+		plt.ylabel('$u$',fontsize=60 )
+
 	
 		def update(i):
 			label = 't = {0}'.format(ts[i])
@@ -31,7 +34,7 @@ def plotAnim(ts, x, us1, us2, real_solutions):
 			line1.set_ydata(us1[i])		
 			line2.set_ydata(us2[i])		
 			ax.set_xlabel(label)
-			ax.legend()
+			ax.legend(fontsize = 50)
 			if(i%10):
 				plt.savefig('solution_plot_t'+str(ts[i])+'.png')
 			return line1, ax
@@ -289,7 +292,7 @@ def gen_data(nxs,k,cour):
 		for i, nx in enumerate(nxs):
 			name1 = "lax"+str(nx)+".txt"
 			x,t,u = np.loadtxt(name1,skiprows=1).T
-
+	
 			us1 = [u[i:i+nx] for i  in xrange(0,len(u),nx)]
 			time = [t[i] for i in xrange(0,len(t),nx)]
 			xs = [x[i:i+nx] for i in xrange(0,len(x),nx)]
@@ -298,11 +301,13 @@ def gen_data(nxs,k,cour):
 			t_lax = time
 			xout.append( xs[0])
 
+
 			# create analytical solution corresponding to output
 			real_sols = []
 			vel = 1.	
 			#print 'time: '+str(time)
 
+			"""
 			for  t in time:
 				wrapped = 1
 				#print "t = "+str(t)
@@ -326,8 +331,9 @@ def gen_data(nxs,k,cour):
 				real_sols.append(real_sol)
 			rsout = real_sols
 			#print us1[-1]
-			nx_us1.append(us1[-1])
 			nx_sols.append(real_sols[-1])
+			"""
+			nx_us1.append(us1[-1])
 
 		#for i,us in enumerate(nx_us1):
 		#	print 'length of row '+str(i)+' of nx_us1 is '+ str(len(us))
@@ -339,6 +345,8 @@ def gen_data(nxs,k,cour):
 		# ---------------Generate Data For Lax---------------------------------------#
 		# only need to generate the numerical solutions, time, x and real sol should be good
 		nx_us2 = []
+		real_sols = []
+		xreal = []
 		cour = .5
 
 		os.system("./prep.x")
@@ -349,6 +357,27 @@ def gen_data(nxs,k,cour):
 			os.system(cmd_1)
 			cmd_2 = "mv advection_data.txt lax_wen%(nx)s.txt" %locals()
 			os.system(cmd_2)
+			cmd_4 = "mv real_sol_data.txt lax_real_sol%(nx)s.txt" %locals()
+			os.system(cmd_4)
+			name2 = "lax_real_sol"+str(nx)+".txt"
+			x_real,t_real,u_real = np.loadtxt(name2,skiprows=1).T
+
+
+
+			real_sols = [u_real[i:i+nx] for i  in xrange(0,len(u_real),nx)]
+			time_real = [t_real[i] for i in xrange(0,len(t_real),nx)]
+			xs_real = [x_real[i:i+nx] for i in xrange(0,len(x_real),nx)]
+			xreal.append( xs_real[0])
+
+			nx_sols.append(real_sols[-1])
+		
+
+			print 'Differences in time and space between cpp real x and t and numerical x and t' 
+			print L2(xs_real[0],xs[0],nx)
+			print
+
+
+
 
 		for i, nx in enumerate(nxs):
 			name1 = "lax_wen"+str(nx)+".txt"
@@ -373,7 +402,7 @@ def gen_data(nxs,k,cour):
 		#print "x for lax: " + str(xout)
 		#print "x for wen: " + str(x_wen)
 
-		return  tout, xout, us1out, us2out, rsout, nx_us1, nx_us2, nx_sols
+		return  tout, xout, us1out, us2out, real_sols, nx_us1, nx_us2, nx_sols
 
 
 				
@@ -558,26 +587,26 @@ def benchmark_lax(nx_us_lax,nx_us_wen,nx_sols,nxs):
 		#----------------------------------------------------------------------------------#
 		plt.title('Order of Convergence',fontsize=60 )
 
-		#plt.xlabel('$nx$',fontsize=50)
-		#plt.ylabel('Error',fontsize=50)
-		#plt.legend(prop={'size': 50})
-		plt.ylabel('Error')
-		plt.xlabel('$nx$')
-		plt.legend()
+		plt.xlabel('$nx$',fontsize=50)
+		plt.ylabel('Error',fontsize=50)
+		plt.legend(prop={'size': 30})
+		#plt.ylabel('Error')
+		#plt.xlabel('$nx$')
+		#plt.legend()
 
 		plt.savefig('benchmark.png')
 		plt.show()
 
 #---------------------------------------------------------------------------------------------------------------#
 
-#matplotlib.rc('xtick',labelsize=50)
-#matplotlib.rc('ytick',labelsize=50)
+matplotlib.rc('xtick',labelsize=40)
+matplotlib.rc('ytick',labelsize=40)
 
 pi = math.pi
 
 cour = .5
-nxs = [8,16,32,64,128,256,512,1024]
-nxs = [8,16,32]
+nxs = [8,16,32,64,128,256,1024,2048]
+nxs = [8,16,32,64,128,256]
 
 time, xs, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data(nxs,1,cour)
 #time, x, us1, us2, real_sols, nx_us1, nx_us2, nx_sols = gen_data_sin(nxs,1,cour)
@@ -586,7 +615,7 @@ print us1[0]
 print us1[0]
 print real_sols[0]
 
-#plotAnim(time, xs[-1], us1, us2, real_sols)
+plotAnim(time, xs[-1], us1, us2, real_sols)
 
 benchmark_lax(nx_us1,nx_us2,nx_sols,nxs)
 

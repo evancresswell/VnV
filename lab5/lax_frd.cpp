@@ -99,9 +99,10 @@ int main ( int argc, char** argv )
 
   cour = atof(argv[2]);
   dt = (cour*dx)/c;
-  dt = .0015;
+  //dt = .0015;
   printf("dt: %f",dt);
   nt = ceil(1./dt);
+  //nt = 2;
 
 
   //u = initial_condition1 ( nx, x );

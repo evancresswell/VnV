@@ -8,18 +8,21 @@
 
 using namespace std;
 
+//int main ( );
 int main ( int argc, char** argv );
 int i4_modp ( int i, int j );
 int i4_wrap ( int ival, int ilo, int ihi );
-double *initial_condition2 ( int nx, double x[] );
+//double *initial_condition ( int nx, double x[] );
 double *initial_condition1 ( int nx, double x[] );
+double *initial_condition2 ( int nx, double x[] );
 double *initial_condition3 ( int nx, double x[] );
-double *real_sol ( int nx, double x[], double t ,double c);
+
 double *r8vec_linspace_new ( int n, double a, double b );
 void timestamp ( );
 
 //****************************************************************************80
 
+//int main ( )
 int main ( int argc, char** argv )
 
 //****************************************************************************80
@@ -51,12 +54,12 @@ int main ( int argc, char** argv )
   double a;
   double b;
   double c;
+  double c1;
+  double c2;
   string command_filename = "advection_commands.txt";
   ofstream command_unit;
   string data_filename = "advection_data.txt";
-  string data_filename1 = "real_sol_data.txt";
   ofstream data_unit;
-  ofstream data_unit1;
   double dt;
   double dx;
   int i;
@@ -69,7 +72,6 @@ int main ( int argc, char** argv )
   int plotstep;
   double t;
   double *u;
-  double *rs;
   double *unew;
   double *x;
   double cour;
@@ -85,16 +87,14 @@ int main ( int argc, char** argv )
   cout << "    0.0 <= x <= 1.0\n";
   cout << "  with periodic boundary conditions, and\n";
   cout << "  with a given initial condition\n";
-  //cout << "    u(0,x) = (10x-4)^2 (6-10x)^2 for 0.4 <= x <= 0.6\n";
-  //cout << "           = 0 elsewhere.\n";
-  cout << "    u(0,x) =( sin( 2*M_PI* (x[i]-.25) ) )^2 + 1  0.4 <= x <= 0.6\n";
-  cout << "           = 1 elsewhere.\n";
+  cout << "    u(0,x) = (10x-4)^2 (6-10x)^2 for 0.4 <= x <= 0.6\n";
+  cout << "           = 0 elsewhere.\n";
   cout << "\n";
   cout << "  We modify the FTCS method using the Lax method:\n";
   cout << "    du/dt = (u(t+dt,x)-0.5*u(t,x-dx)-0.5*u(t,x+dx))/dt\n";
   cout << "    du/dx = (u(t,x+dx)-u(t,x-dx))/2/dx\n";
 
-  // read nx through command line
+  
   nx = 101;
   nx = atof(argv[1]);
 
@@ -102,54 +102,41 @@ int main ( int argc, char** argv )
   a = 0.0;
   b = 1.0;
   x = r8vec_linspace_new ( nx, a, b );
+  nt = 1000;
+  dt = 1.0 / ( double ) ( nt );
   c = 1.0;
-  // old dt definition
-  //nt = 1000;
-  //dt = 1.0 / ( double ) ( nt );
-  // new dt definition
+  c1 = 0.5 *       c * dt / dx;
+  c2 = 0.5 * pow ( c * dt / dx, 2 );
+
   cour = atof(argv[2]);
-  dt = cour*dx/c;
-  //dt = .0015;
+  dt = (cour*dx)/c;
+  dt = .0015;
   printf("dt: %f",dt);
   nt = ceil(1./dt);
-  //nt = 2;
-  double c1 = 0.5 *       c * dt / dx;
-  double c2 = 0.5 * pow ( c * dt / dx, 2 );
 
 
-
+  //u = initial_condition1 ( nx, x );
   u = initial_condition2 ( nx, x );
-
   //u = initial_condition3 ( nx, x );
+  //u = initial_condition4 ( nx, x );
 //
 //  Open data file, and write solutions as they are computed.
 //
   data_unit.open ( data_filename.c_str ( ) );
-  data_unit1.open ( data_filename1.c_str ( ) );
 
   t = 0.0;
-  rs = real_sol ( nx, x,  t , c);
   data_unit << "  " << x[0]
             << "  " << t
             << "  " << u[0] << "\n";
- data_unit1 << "  " << x[0]
-            << "  " << t
-            << "  " << rs[0] << "\n";
-
   for ( j = 0; j < nx; j++ )
   {
     data_unit << "  " << x[j]
               << "  " << t
               << "  " << u[j] << "\n";
-	data_unit1 << "  " << x[j]
-              << "  " << t
-              << "  " << rs[j] << "\n";
-
   }
   data_unit << "\n";
-  data_unit1 << "\n";
 
-  nt_step = 10;
+  nt_step = 100;
 
   cout << "\n";
   cout << "  Number of nodes NX = " << nx << "\n";
@@ -165,8 +152,8 @@ int main ( int argc, char** argv )
     {
       jm1 = i4_wrap ( j - 1, 0, nx - 1 );
       jp1 = i4_wrap ( j + 1, 0, nx - 1 );
-      //unew[j] = 0.5 * u[jp1] + 0.5 * u[jm1] - c * dt / dx / 2.0 * ( u[jp1] - u[jm1] );
-      unew[j] = u[j] - c1 * ( u[jp1] - u[jm1] ) + c2 * ( u[jp1] - 2.0 * u[j] + u[jm1] );
+      //unew[j] = u[j] - c1 * ( u[jp1] - u[jm1] ) + c2 * ( u[jp1] - 2.0 * u[j] + u[jm1] );
+      unew[j] = 0.5 * u[jp1] + 0.5 * u[jm1] - c * dt / dx / 2.0 * ( u[jp1] - u[jm1] );
     }
     for ( j = 0; j < nx; j++ )
     {
@@ -175,36 +162,20 @@ int main ( int argc, char** argv )
     if ( i == nt_step - 1 )
     {
       t = ( double ) ( i ) * dt;
-
-  	  rs = real_sol ( nx, x,  t , c);
       for ( j = 0; j < nx; j++ )
       {
         data_unit << "  " << x[j]
                   << "  " << t
                   << "  " << u[j] << "\n";
-		data_unit1 << "  " << x[j]
-                  << "  " << t
-                  << "  " << rs[j] << "\n";
-
       }
       data_unit << "\n";
-      data_unit1 << "\n";
-      nt_step = nt_step + 10;
+      nt_step = nt_step + 100;
     }
   }
-	/*
-	cout << "l2_error: [";
-	for(i=0;i<l2_error.size();i++)
-	{
-		cout << l2_error[i] << " ";
-	}
-	cout << "]\n";
-	*/
 //
 //  Close the data file once the computation is done.
 //
   data_unit.close ( );
-  data_unit1.close ( );
 
   cout << "\n";
   cout << "  Plot data written to the file \"" << data_filename << "\"\n";
@@ -495,7 +466,6 @@ double *initial_condition2 ( int nx, double x[] )
 }
 //****************************************************************************80
 
-
 double *initial_condition3 ( int nx, double x[] )
 
 //****************************************************************************80
@@ -525,6 +495,47 @@ double *initial_condition3 ( int nx, double x[] )
   for ( i = 0; i < nx; i++ )
   {
      u[i] = sin( 2*M_PI*x[i] ) +1.  ;
+  }
+  return u;
+}
+//****************************************************************************80
+
+double *initial_condition4 ( int nx, double x[] )
+
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    INITIAL_CONDITION3 sets the initial condition.
+//
+//  Author:
+//
+//  Evan Cresswel xD
+//
+//  Parameters:
+//
+//    Input, int NX, the number of nodes.
+//
+//    Input, double X[NX], the coordinates of the nodes.
+//
+//    Output, double INITIAL_CONDITION[NX], the value of the initial condition.
+//
+{
+  int i;
+  double *u;
+
+  u = new double[nx];
+
+  for ( i = 0; i < nx; i++ )
+  {
+    if  ( 0.25 <= x[i] && x[i] <= 0.75 )
+    {
+      u[i] =  2. ;
+    }
+    else
+    {
+      u[i] = 1.0;
+    }
   }
   return u;
 }
@@ -636,64 +647,3 @@ void timestamp ( )
   return;
 # undef TIME_SIZE
 }
-//****************************************************************************80
-
-double *real_sol ( int nx, double x[], double t ,double c)
-//****************************************************************************80
-//
-//  Purpose:
-//
-//    INITIAL_CONDITION2 sets the initial condition.
-//
-//  Author:
-//
-//  Evan Cresswel xD
-//
-//  Parameters:
-//
-//    Input, int NX, the number of nodes.
-//
-//    Input, double X[NX], the coordinates of the nodes.
-//
-//    Output, double INITIAL_CONDITION[NX], the value of the initial condition.
-//
-{
-  int i;
-  double *u;
-  bool wrapped = true;
-  u = new double[nx];
-
-  for ( i = 0; i < nx; i++ )
-  {
-    if  ( fmod( c*t + .25 , 1. ) <= x[i] && x[i] <= fmod( c*t + .75 , 1. ) )
-    {
-      u[i] = pow( sin( 2*M_PI* ( x[i] - fmod( c*t + .25 , 1. ) ) ) , 2 ) + 1 ;
-	  wrapped = false;
-    }
-    else
-    {
-      u[i] = 1.0;
-    }
-  }
-  if(wrapped)
-  {
-	for ( i = 0; i < nx; i++ )
-	  {
-	    if  ( fmod( c*t + .25 , 1. ) <= x[i] || x[i] <= fmod( c*t + .75 , 1. ) )
-	    {
-	      u[i] = pow( sin( 2*M_PI* ( x[i] - fmod( c*t + .25 , 1. ) ) ) , 2 ) + 1 ;
-		  wrapped = false;
-	    }
-	    else
-	    {
-	      u[i] = 1.0;
-	    }
-	
-  	  }
-  }
-
-  return u;
-}
-//****************************************************************************80
-
-
